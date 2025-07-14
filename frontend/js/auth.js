@@ -1,7 +1,10 @@
 // Authentication Module
 class AuthManager {
     constructor() {
-        this.apiUrl = 'http://localhost:3001/api';
+        // Use the correct API URL based on your server configuration
+        this.apiUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3002/api' 
+            : 'http://localhost:3002/api';
         this.currentUser = null;
         this.init();
     }
@@ -140,6 +143,8 @@ class AuthManager {
             if (response.ok) {
                 this.currentUser = data.user;
                 localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userRole', data.user.role);
+                localStorage.setItem('userName', data.user.name);
                 
                 this.showAlert('success', 'Login successful!', 'Welcome back!');
                 setTimeout(() => {
@@ -272,12 +277,21 @@ class AuthManager {
             if (response.ok) {
                 const data = await response.json();
                 this.currentUser = data.user;
+                localStorage.setItem('userRole', data.user.role);
+                localStorage.setItem('userName', data.user.name);
+                console.log('Auth check successful, redirecting to:', data.user.role);
                 this.redirectToUserDashboard(data.user.role);
             } else {
+                console.log('Auth check failed, removing token');
                 localStorage.removeItem('authToken');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userName');
             }
         } catch (error) {
+            console.error('Auth check error:', error);
             localStorage.removeItem('authToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
         }
     }
 
@@ -289,6 +303,7 @@ class AuthManager {
         };
 
         const dashboard = dashboards[role] || 'customer.html';
+        console.log('Redirecting to dashboard:', dashboard, 'for role:', role);
         window.location.href = dashboard;
     }
 
@@ -370,6 +385,8 @@ class AuthManager {
         }
 
         localStorage.removeItem('authToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
         localStorage.removeItem('rememberMe');
         this.currentUser = null;
         window.location.href = 'auth.html';
