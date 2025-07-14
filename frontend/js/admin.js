@@ -345,6 +345,9 @@ class AdminDashboard {
         
         // Load products on page load
         this.loadProducts();
+        
+        // Load users on page load
+        this.loadUsers();
     }
     
     async loadProducts() {
@@ -402,17 +405,21 @@ class AdminDashboard {
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Add New User</h3>
-                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                    <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <form id="addUserForm">
                         <div class="form-group">
                             <label for="newUserEmail">Email:</label>
-                            <input type="email" id="newUserEmail" required>
+                            <input type="email" id="newUserEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserName">Name:</label>
+                            <input type="text" id="newUserName" name="name">
                         </div>
                         <div class="form-group">
                             <label for="newUserRole">Role:</label>
-                            <select id="newUserRole" required>
+                            <select id="newUserRole" name="role" required>
                                 <option value="customer">Customer</option>
                                 <option value="staff">Staff</option>
                                 <option value="admin">Admin</option>
@@ -420,18 +427,34 @@ class AdminDashboard {
                         </div>
                         <div class="form-group">
                             <label for="newUserPassword">Password:</label>
-                            <input type="password" id="newUserPassword" required>
+                            <input type="password" id="newUserPassword" name="password" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="secondary-btn" data-action="close-modal">Cancel</button>
+                            <button type="submit" class="primary-btn">Create User</button>
                         </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="secondary-btn" onclick="closeModal()">Cancel</button>
-                    <button class="primary-btn" onclick="createUser()">Create User</button>
                 </div>
             </div>
         `;
         
         document.body.appendChild(modal);
+        
+        // Handle form submission
+        modal.querySelector('#addUserForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.createUser(e.target);
+        });
+        
+        // Handle close button
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            modal.remove();
+        });
+        
+        // Handle cancel button
+        modal.querySelector('[data-action="close-modal"]').addEventListener('click', () => {
+            modal.remove();
+        });
         
         // Focus on email field
         setTimeout(() => {
@@ -446,13 +469,15 @@ class AdminDashboard {
         }
     }
 
-    async createUser() {
-        const email = document.getElementById('newUserEmail').value;
-        const role = document.getElementById('newUserRole').value;
-        const password = document.getElementById('newUserPassword').value;
+    async createUser(form) {
+        const formData = new FormData(form);
+        const email = formData.get('email');
+        const name = formData.get('name') || '';
+        const role = formData.get('role');
+        const password = formData.get('password');
         
         if (!email || !role || !password) {
-            alert('Please fill in all fields');
+            alert('Please fill in all required fields');
             return;
         }
         
@@ -464,54 +489,27 @@ class AdminDashboard {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, role, password })
+                body: JSON.stringify({ email, name, role, password })
             });
             
             if (response.ok) {
                 const newUser = await response.json();
                 
-                // Add user to table
-                const tableBody = document.getElementById('usersTableBody');
-                const userCount = tableBody.children.length + 1;
-                const userId = String(userCount).padStart(2, '0');
-                const currentDate = new Date().toLocaleDateString('en-US', {
-                    month: '2-digit',
-                    day: '2-digit',
-                    year: 'numeric'
-                });
+                // Close modal
+                const modal = document.querySelector('.modal-overlay');
+                if (modal) modal.remove();
                 
-                const row = document.createElement('tr');
-                row.setAttribute('data-user-id', newUser._id || userId);
-                row.innerHTML = `
-                    <td>${userId}</td>
-                    <td>${email}</td>
-                    <td>${currentDate}</td>
-                    <td>
-                        <select class="role-dropdown" onchange="updateUserRole('${newUser._id || userId}', this.value)">
-                            <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
-                            <option value="staff" ${role === 'staff' ? 'selected' : ''}>Staff</option>
-                            <option value="customer" ${role === 'customer' ? 'selected' : ''}>Customer</option>
-                        </select>
-                    </td>
-                    <td>
-                        <button class="delete-btn" onclick="deleteUser('${newUser._id || userId}')">Delete</button>
-                    </td>
-                `;
+                // Refresh users table
+                this.fetchUsers();
                 
-                tableBody.appendChild(row);
-                
-                if (window.adminDashboard) {
-                    window.adminDashboard.showNotification('User created successfully', 'success');
-                }
-                
-                this.closeModal();
+                alert('User created successfully!');
             } else {
                 const error = await response.json();
-                alert(`Error: ${error.message}`);
+                alert(`Error creating user: ${error.message}`);
             }
         } catch (error) {
             console.error('Error creating user:', error);
-            alert('Network error. Please try again.');
+            alert('Error creating user. Please try again.');
         }
     }
 
@@ -777,14 +775,14 @@ class AdminDashboard {
                 <td>${user.email}</td>
                 <td>${createdDate}</td>
                 <td>
-                    <select class="role-dropdown" onchange="updateUserRole('${user._id || userId}', this.value)">
+                    <select class="role-dropdown" data-user-id="${user._id || userId}">
                         <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
                         <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>Staff</option>
                         <option value="customer" ${user.role === 'customer' ? 'selected' : ''}>Customer</option>
                     </select>
                 </td>
                 <td>
-                    <button class="delete-btn" onclick="deleteUser('${user._id || userId}')">Delete</button>
+                    <button class="delete-btn" data-action="delete-user" data-user-id="${user._id || userId}">Delete</button>
                 </td>
             `;
             
