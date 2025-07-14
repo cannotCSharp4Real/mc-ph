@@ -49,15 +49,6 @@ class AdminDashboard {
     }
 
     setupEventListeners() {
-        // Sidebar toggle
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', () => {
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.classList.toggle('collapsed');
-            });
-        }
-
         // Navigation menu items
         document.querySelectorAll('.menu-link').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -1190,6 +1181,19 @@ class AdminDashboard {
             container.appendChild(noProductsMessage);
         }
     }
+
+    // Logout functionality
+    logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('rememberMe');
+            window.location.href = 'auth.html';
+        }
+    }
+
+    // User Management Functions
 }
 
 // Global functions
