@@ -1,12 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../config/database');
+const mongoose = require('mongoose');
+
+// Product Schema
+const productSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    description: { type: String, default: '' },
+    price: { type: Number },
+    category: { type: String, required: true },
+    pricing: {
+        small: { type: Number },
+        medium: { type: Number },
+        large: { type: Number }
+    },
+    temperature: [{ type: String }],
+    size: { type: String },
+    image: { type: String, default: '' },
+    inStock: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+const Product = mongoose.model('Product', productSchema);
 
 // GET /api/products - Get all products
 router.get('/', async (req, res) => {
     try {
-        const db = getDB();
-        const products = await db.collection('products').find({}).toArray();
+        const products = await Product.find({}).sort({ createdAt: -1 });
         res.json(products);
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -17,9 +37,7 @@ router.get('/', async (req, res) => {
 // GET /api/products/:id - Get single product
 router.get('/:id', async (req, res) => {
     try {
-        const db = getDB();
-        const { ObjectId } = require('mongodb');
-        const product = await db.collection('products').findOne({ _id: new ObjectId(req.params.id) });
+        const product = await Product.findById(req.params.id);
         
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
@@ -32,80 +50,58 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST /api/products - Create new product (admin only)
+// POST /api/products - Create new product
 router.post('/', async (req, res) => {
     try {
-        const db = getDB();
-        const { name, description, price, category, image, inStock } = req.body;
+        const productData = req.body;
+        productData.updatedAt = new Date();
         
-        const newProduct = {
-            name,
-            description,
-            price: parseFloat(price),
-            category,
-            image,
-            inStock: inStock !== undefined ? inStock : true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
+        const newProduct = new Product(productData);
+        const savedProduct = await newProduct.save();
         
-        const result = await db.collection('products').insertOne(newProduct);
-        res.status(201).json({ ...newProduct, _id: result.insertedId });
+        res.status(201).json(savedProduct);
     } catch (error) {
         console.error('Error creating product:', error);
-        res.status(500).json({ message: 'Error creating product' });
+        res.status(500).json({ message: 'Error creating product', error: error.message });
     }
 });
 
-// PUT /api/products/:id - Update product (admin only)
+// PUT /api/products/:id - Update product
 router.put('/:id', async (req, res) => {
     try {
-        const db = getDB();
-        const { ObjectId } = require('mongodb');
-        const { name, description, price, category, image, inStock } = req.body;
+        const updateData = req.body;
+        updateData.updatedAt = new Date();
         
-        const updateData = {
-            name,
-            description,
-            price: parseFloat(price),
-            category,
-            image,
-            inStock,
-            updatedAt: new Date()
-        };
-        
-        const result = await db.collection('products').updateOne(
-            { _id: new ObjectId(req.params.id) },
-            { $set: updateData }
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id,
+            updateData,
+            { new: true, runValidators: true }
         );
         
-        if (result.matchedCount === 0) {
+        if (!updatedProduct) {
             return res.status(404).json({ message: 'Product not found' });
         }
         
-        res.json({ message: 'Product updated successfully' });
+        res.json(updatedProduct);
     } catch (error) {
         console.error('Error updating product:', error);
-        res.status(500).json({ message: 'Error updating product' });
+        res.status(500).json({ message: 'Error updating product', error: error.message });
     }
 });
 
-// DELETE /api/products/:id - Delete product (admin only)
+// DELETE /api/products/:id - Delete product
 router.delete('/:id', async (req, res) => {
     try {
-        const db = getDB();
-        const { ObjectId } = require('mongodb');
+        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
         
-        const result = await db.collection('products').deleteOne({ _id: new ObjectId(req.params.id) });
-        
-        if (result.deletedCount === 0) {
+        if (!deletedProduct) {
             return res.status(404).json({ message: 'Product not found' });
         }
         
-        res.json({ message: 'Product deleted successfully' });
+        res.json({ message: 'Product deleted successfully', product: deletedProduct });
     } catch (error) {
         console.error('Error deleting product:', error);
-        res.status(500).json({ message: 'Error deleting product' });
+        res.status(500).json({ message: 'Error deleting product', error: error.message });
     }
 });
 

@@ -215,80 +215,161 @@
                 <section id="products-section" class="content-section">
                     <div class="section-header">
                         <h2>Products Management</h2>
-                        <button class="primary-btn" data-action="add-product">
-                            <i class="fas fa-plus"></i>
-                            Add New Product
-                        </button>
                     </div>
-                    <div class="table-card">
-                        <div class="table-header">
-                            <div class="table-search">
-                                <input type="text" placeholder="Search products..." id="productSearch">
+                    
+                    <!-- Products Categories Grid -->
+                    <div class="products-grid">
+                        <!-- Drinks Section -->
+                        <div class="category-section">
+                            <div class="category-header">
+                                <h3><i class="fas fa-coffee"></i> Drinks</h3>
+                                <button class="primary-btn" data-action="add-product" data-category="drinks">
+                                    <i class="fas fa-plus"></i>
+                                    Add Product
+                                </button>
                             </div>
-                            <div class="table-filters">
-                                <select id="categoryFilter">
-                                    <option value="">All Categories</option>
-                                    <option value="espresso">Espresso</option>
-                                    <option value="latte">Latte</option>
-                                    <option value="americano">Americano</option>
-                                    <option value="pastries">Pastries</option>
-                                </select>
+                            <div class="products-container">
+                                <!-- Americano -->
+                                <div class="product-card">
+                                    <div class="product-header">
+                                        <h4>Americano</h4>
+                                        <div class="product-actions">
+                                            <button class="action-btn-small edit-btn" data-product-id="americano">Edit</button>
+                                            <button class="action-btn-small delete-btn" data-product-id="americano">Delete</button>
+                                        </div>
+                                    </div>
+                                    <div class="product-details">
+                                        <div class="product-info">
+                                            <span class="product-label">Category:</span>
+                                            <span class="product-value">Espresso</span>
+                                        </div>
+                                        <div class="product-info">
+                                            <span class="product-label">Temperature:</span>
+                                            <span class="product-value">Hot</span>
+                                        </div>
+                                        <div class="product-info">
+                                            <span class="product-label">Iced:</span>
+                                            <span class="product-value">Available</span>
+                                        </div>
+                                        <div class="product-info size-options">
+                                            <span class="product-label">Size:</span>
+                                            <div class="size-prices">
+                                                <span class="size-price">Small: ₱69</span>
+                                                <span class="size-price">Medium: ₱79</span>
+                                                <span class="size-price">Large: ₱99</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Speculoos -->
+                                <div class="product-card">
+                                    <div class="product-header">
+                                        <h4>Speculoos</h4>
+                                        <div class="product-actions">
+                                            <button class="action-btn-small edit-btn" data-product-id="speculoos">Edit</button>
+                                            <button class="action-btn-small delete-btn" data-product-id="speculoos">Delete</button>
+                                        </div>
+                                    </div>
+                                    <div class="product-details">
+                                        <div class="product-info">
+                                            <span class="product-label">Category:</span>
+                                            <span class="product-value">Milkshake</span>
+                                        </div>
+                                        <div class="product-info size-options">
+                                            <span class="product-label">Size:</span>
+                                            <div class="size-prices">
+                                                <span class="size-price">Small: ₱69</span>
+                                                <span class="size-price">Medium: ₱79</span>
+                                                <span class="size-price">Large: ₱99</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="table-container">
-                            <table id="productsTable">
-                                <thead>
-                                    <tr>
-                                        <th>Product Name</th>
-                                        <th>Category</th>
-                                        <th>Price</th>
-                                        <th>Stock</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="productsTableBody">
-                                    <tr>
-                                        <td>Spanish Latte</td>
-                                        <td>Latte</td>
-                                        <td>₱150</td>
-                                        <td>45</td>
-                                        <td><span class="status-badge active">Active</span></td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn-small edit-btn">Edit</button>
-                                                <button class="action-btn-small delete-btn">Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Americano</td>
-                                        <td>Espresso</td>
-                                        <td>₱120</td>
-                                        <td>32</td>
-                                        <td><span class="status-badge active">Active</span></td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn-small edit-btn">Edit</button>
-                                                <button class="action-btn-small delete-btn">Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Caramel Macchiato</td>
-                                        <td>Latte</td>
-                                        <td>₱170</td>
-                                        <td>28</td>
-                                        <td><span class="status-badge active">Active</span></td>
-                                        <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn-small edit-btn">Edit</button>
-                                                <button class="action-btn-small delete-btn">Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        
+                        <!-- Food Section -->
+                        <div class="category-section">
+                            <div class="category-header">
+                                <h3><i class="fas fa-utensils"></i> Food</h3>
+                                <button class="primary-btn" data-action="add-product" data-category="food">
+                                    <i class="fas fa-plus"></i>
+                                    Add Product
+                                </button>
+                            </div>
+                            <div class="products-container">
+                                <!-- Peanut Butter Crunch -->
+                                <div class="product-card">
+                                    <div class="product-header">
+                                        <h4>Peanut Butter Crunch</h4>
+                                        <div class="product-actions">
+                                            <button class="action-btn-small edit-btn" data-product-id="peanut-butter-crunch">Edit</button>
+                                            <button class="action-btn-small delete-btn" data-product-id="peanut-butter-crunch">Delete</button>
+                                        </div>
+                                    </div>
+                                    <div class="product-details">
+                                        <div class="product-info">
+                                            <span class="product-label">Category:</span>
+                                            <span class="product-value">Sandwich</span>
+                                        </div>
+                                        <div class="product-info">
+                                            <span class="product-label">Size:</span>
+                                            <span class="product-value">130</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Plain Chocolate -->
+                                <div class="product-card">
+                                    <div class="product-header">
+                                        <h4>Plain Chocolate</h4>
+                                        <div class="product-actions">
+                                            <button class="action-btn-small edit-btn" data-product-id="plain-chocolate">Edit</button>
+                                            <button class="action-btn-small delete-btn" data-product-id="plain-chocolate">Delete</button>
+                                        </div>
+                                    </div>
+                                    <div class="product-details">
+                                        <div class="product-info">
+                                            <span class="product-label">Category:</span>
+                                            <span class="product-value">Waffle</span>
+                                        </div>
+                                        <div class="product-info">
+                                            <span class="product-label">Size:</span>
+                                            <span class="product-value">140</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Add-ons Section -->
+                        <div class="category-section">
+                            <div class="category-header">
+                                <h3><i class="fas fa-plus-circle"></i> Add-ons</h3>
+                                <button class="primary-btn" data-action="add-product" data-category="addons">
+                                    <i class="fas fa-plus"></i>
+                                    Add Product
+                                </button>
+                            </div>
+                            <div class="products-container">
+                                <!-- Espresso Shot -->
+                                <div class="product-card">
+                                    <div class="product-header">
+                                        <h4>Espresso Shot</h4>
+                                        <div class="product-actions">
+                                            <button class="action-btn-small edit-btn" data-product-id="espresso-shot">Edit</button>
+                                            <button class="action-btn-small delete-btn" data-product-id="espresso-shot">Delete</button>
+                                        </div>
+                                    </div>
+                                    <div class="product-details">
+                                        <div class="product-info">
+                                            <span class="product-label">Price:</span>
+                                            <span class="product-value">₱30</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     

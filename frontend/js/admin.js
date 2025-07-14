@@ -93,10 +93,24 @@ class AdminDashboard {
             } else if (action === 'add-user') {
                 this.openUserModal();
             } else if (action === 'add-product') {
-                this.openProductModal();
+                const category = e.target.getAttribute('data-category');
+                this.openProductModal(category);
             } else if (action === 'delete-user') {
                 const userId = e.target.getAttribute('data-user-id');
                 this.deleteUser(userId);
+            }
+            
+            // Handle product actions
+            if (e.target.classList.contains('edit-btn')) {
+                const productId = e.target.getAttribute('data-product-id');
+                if (productId) {
+                    this.editProduct(productId);
+                }
+            } else if (e.target.classList.contains('delete-btn')) {
+                const productId = e.target.getAttribute('data-product-id');
+                if (productId) {
+                    this.deleteProduct(productId);
+                }
             }
         });
 
@@ -328,6 +342,23 @@ class AdminDashboard {
     loadData() {
         // Simulate loading data
         this.animateNumbers();
+        
+        // Load products on page load
+        this.loadProducts();
+    }
+    
+    async loadProducts() {
+        try {
+            const response = await fetch('http://localhost:3002/api/products');
+            if (response.ok) {
+                const products = await response.json();
+                this.renderProductsInGrid(products);
+            } else {
+                console.error('Failed to load products');
+            }
+        } catch (error) {
+            console.error('Error loading products:', error);
+        }
     }
 
     animateNumbers() {
@@ -759,6 +790,407 @@ class AdminDashboard {
             
             tableBody.appendChild(row);
         });
+    }
+
+    // Product Management Methods
+    openProductModal(category = 'drinks') {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New Product - ${category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <div class="form-group">
+                            <label for="productName">Product Name</label>
+                            <input type="text" id="productName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">Category</label>
+                            <select id="productCategory" name="category" required>
+                                ${this.getCategoryOptions(category)}
+                            </select>
+                        </div>
+                        ${this.getAdditionalFields(category)}
+                        <div class="form-actions">
+                            <button type="button" class="secondary-btn" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                            <button type="submit" class="primary-btn">Add Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Handle form submission
+        modal.querySelector('#productForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addProduct(e.target);
+        });
+        
+        // Handle close button
+        modal.querySelector('.modal-close').addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+    
+    getCategoryOptions(section) {
+        const options = {
+            drinks: `
+                <option value="espresso">Espresso</option>
+                <option value="latte">Latte</option>
+                <option value="americano">Americano</option>
+                <option value="milkshake">Milkshake</option>
+                <option value="frappuccino">Frappuccino</option>
+            `,
+            food: `
+                <option value="sandwich">Sandwich</option>
+                <option value="waffle">Waffle</option>
+                <option value="pastry">Pastry</option>
+                <option value="salad">Salad</option>
+            `,
+            addons: `
+                <option value="addon">Add-on</option>
+            `
+        };
+        return options[section] || options.drinks;
+    }
+    
+    getAdditionalFields(section) {
+        if (section === 'drinks') {
+            return `
+                <div class="form-group">
+                    <label>Temperature Options</label>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="temperature" value="hot" checked> Hot</label>
+                        <label><input type="checkbox" name="temperature" value="iced"> Iced</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Size & Pricing</label>
+                    <div class="size-pricing">
+                        <div class="size-row">
+                            <label>Small</label>
+                            <input type="number" name="price_small" placeholder="₱69" min="0">
+                        </div>
+                        <div class="size-row">
+                            <label>Medium</label>
+                            <input type="number" name="price_medium" placeholder="₱79" min="0">
+                        </div>
+                        <div class="size-row">
+                            <label>Large</label>
+                            <input type="number" name="price_large" placeholder="₱99" min="0">
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (section === 'food') {
+            return `
+                <div class="form-group">
+                    <label for="productSize">Size/Portion</label>
+                    <input type="text" id="productSize" name="size" placeholder="e.g., 130g">
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">Price</label>
+                    <input type="number" id="productPrice" name="price" placeholder="₱0.00" min="0" step="0.01">
+                </div>
+            `;
+        } else if (section === 'addons') {
+            return `
+                <div class="form-group">
+                    <label for="productPrice">Price</label>
+                    <input type="number" id="productPrice" name="price" placeholder="₱30" min="0" step="0.01" required>
+                </div>
+            `;
+        }
+        return '';
+    }
+    
+    async addProduct(form) {
+        const formData = new FormData(form);
+        const productData = {};
+        
+        // Get all form data
+        for (let [key, value] of formData.entries()) {
+            productData[key] = value;
+        }
+        
+        // Handle temperature options for drinks
+        const temperatureOptions = [];
+        if (formData.getAll('temperature').length > 0) {
+            temperatureOptions.push(...formData.getAll('temperature'));
+            productData.temperature = temperatureOptions;
+        }
+        
+        // Handle pricing for drinks
+        if (productData.price_small || productData.price_medium || productData.price_large) {
+            productData.pricing = {
+                small: parseFloat(productData.price_small) || 0,
+                medium: parseFloat(productData.price_medium) || 0,
+                large: parseFloat(productData.price_large) || 0
+            };
+            // Remove individual price fields
+            delete productData.price_small;
+            delete productData.price_medium;
+            delete productData.price_large;
+        }
+        
+        // Convert price to number if it exists
+        if (productData.price) {
+            productData.price = parseFloat(productData.price);
+        }
+        
+        // Add additional fields
+        productData.description = productData.description || '';
+        productData.inStock = true;
+        productData.image = productData.image || '';
+        
+        try {
+            const response = await fetch('http://localhost:3002/api/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(productData)
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                this.showNotification('Product added successfully!', 'success');
+                form.closest('.modal-overlay').remove();
+                this.refreshProductsDisplay();
+            } else {
+                const error = await response.json();
+                this.showNotification(`Failed to add product: ${error.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error adding product:', error);
+            this.showNotification('Error adding product. Please try again.', 'error');
+        }
+    }
+    
+    async editProduct(productId) {
+        try {
+            // For demo purposes, show a comprehensive edit modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Edit Product - ${productId}</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editProductForm">
+                            <div class="form-group">
+                                <label for="editProductName">Product Name</label>
+                                <input type="text" id="editProductName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editProductDescription">Description</label>
+                                <textarea id="editProductDescription" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="editProductPrice">Price</label>
+                                <input type="number" id="editProductPrice" name="price" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="editProductCategory">Category</label>
+                                <select id="editProductCategory" name="category" required>
+                                    <option value="espresso">Espresso</option>
+                                    <option value="latte">Latte</option>
+                                    <option value="americano">Americano</option>
+                                    <option value="milkshake">Milkshake</option>
+                                    <option value="sandwich">Sandwich</option>
+                                    <option value="waffle">Waffle</option>
+                                    <option value="addon">Add-on</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="secondary-btn" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                                <button type="submit" class="primary-btn">Update Product</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Handle form submission
+            modal.querySelector('#editProductForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const productData = Object.fromEntries(formData.entries());
+                
+                try {
+                    const response = await fetch(`http://localhost:3002/api/products/${productId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                        },
+                        body: JSON.stringify(productData)
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showNotification('Product updated successfully!', 'success');
+                        modal.remove();
+                        this.refreshProductsDisplay();
+                    } else {
+                        const error = await response.json();
+                        this.showNotification(`Failed to update product: ${error.message}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating product:', error);
+                    this.showNotification('Error updating product. Please try again.', 'error');
+                }
+            });
+            
+            // Handle close button
+            modal.querySelector('.modal-close').addEventListener('click', () => {
+                modal.remove();
+            });
+            
+        } catch (error) {
+            console.error('Error opening edit modal:', error);
+            this.showNotification('Error opening edit form. Please try again.', 'error');
+        }
+    }
+    
+    async deleteProduct(productId) {
+        if (confirm('Are you sure you want to delete this product?')) {
+            try {
+                const response = await fetch(`http://localhost:3002/api/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    this.showNotification('Product deleted successfully!', 'success');
+                    this.refreshProductsDisplay();
+                } else {
+                    const error = await response.json();
+                    this.showNotification(`Failed to delete product: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting product:', error);
+                this.showNotification('Error deleting product. Please try again.', 'error');
+            }
+        }
+    }
+    
+    async refreshProductsDisplay() {
+        try {
+            // Fetch products from API
+            const response = await fetch('http://localhost:3002/api/products', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const products = await response.json();
+                this.renderProductsInGrid(products);
+                this.showNotification('Products refreshed successfully!', 'success');
+            } else {
+                this.showNotification('Failed to refresh products', 'error');
+            }
+        } catch (error) {
+            console.error('Error refreshing products:', error);
+            this.showNotification('Error refreshing products. Using default display.', 'warning');
+        }
+    }
+    
+    renderProductsInGrid(products) {
+        // Update the products display with fetched data
+        const drinksContainer = document.querySelector('.category-section:first-child .products-container');
+        const foodContainer = document.querySelector('.category-section:nth-child(2) .products-container');
+        const addonsContainer = document.querySelector('.category-section:nth-child(3) .products-container');
+        
+        if (drinksContainer) {
+            this.renderCategoryProducts(drinksContainer, products.filter(p => 
+                ['espresso', 'latte', 'americano', 'milkshake', 'frappuccino'].includes(p.category)
+            ));
+        }
+        
+        if (foodContainer) {
+            this.renderCategoryProducts(foodContainer, products.filter(p => 
+                ['sandwich', 'waffle', 'pastry', 'salad'].includes(p.category)
+            ));
+        }
+        
+        if (addonsContainer) {
+            this.renderCategoryProducts(addonsContainer, products.filter(p => 
+                p.category === 'addon'
+            ));
+        }
+    }
+    
+    renderCategoryProducts(container, products) {
+        container.innerHTML = '';
+        
+        products.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            productCard.innerHTML = `
+                <div class="product-header">
+                    <h4>${product.name}</h4>
+                    <div class="product-actions">
+                        <button class="action-btn-small edit-btn" data-product-id="${product._id}">Edit</button>
+                        <button class="action-btn-small delete-btn" data-product-id="${product._id}">Delete</button>
+                    </div>
+                </div>
+                <div class="product-details">
+                    <div class="product-info">
+                        <span class="product-label">Category:</span>
+                        <span class="product-value">${product.category}</span>
+                    </div>
+                    ${product.description ? `
+                        <div class="product-info">
+                            <span class="product-label">Description:</span>
+                            <span class="product-value">${product.description}</span>
+                        </div>
+                    ` : ''}
+                    ${product.price ? `
+                        <div class="product-info">
+                            <span class="product-label">Price:</span>
+                            <span class="product-value">₱${product.price}</span>
+                        </div>
+                    ` : ''}
+                    ${product.pricing ? `
+                        <div class="product-info size-options">
+                            <span class="product-label">Size:</span>
+                            <div class="size-prices">
+                                ${product.pricing.small ? `<span class="size-price">Small: ₱${product.pricing.small}</span>` : ''}
+                                ${product.pricing.medium ? `<span class="size-price">Medium: ₱${product.pricing.medium}</span>` : ''}
+                                ${product.pricing.large ? `<span class="size-price">Large: ₱${product.pricing.large}</span>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            container.appendChild(productCard);
+        });
+        
+        // If no products, show a message
+        if (products.length === 0) {
+            const noProductsMessage = document.createElement('div');
+            noProductsMessage.className = 'no-products-message';
+            noProductsMessage.style.cssText = 'text-align: center; color: #6c757d; padding: 20px; font-style: italic;';
+            noProductsMessage.textContent = 'No products in this category yet.';
+            container.appendChild(noProductsMessage);
+        }
     }
 }
 
