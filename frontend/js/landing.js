@@ -145,12 +145,12 @@ function browseMenu() {
         return;
     }
 
-    // TODO: Redirect to menu/customer dashboard
-    // For now, show notification
+    // Redirect to customer dashboard/menu page
     landingPage.showNotification('Redirecting to menu...', 'info');
     
     // Simulate redirect delay
     setTimeout(() => {
+        // Update this to the correct customer page when implemented
         window.location.href = 'customer.html';
     }, 1000);
 }
