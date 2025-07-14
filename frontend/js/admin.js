@@ -58,6 +58,48 @@ class AdminDashboard {
             });
         }
 
+        // Navigation menu items
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const section = link.getAttribute('data-section');
+                this.showSection(section);
+            });
+        });
+
+        // Chart period selector
+        const chartPeriod = document.getElementById('chartPeriod');
+        if (chartPeriod) {
+            chartPeriod.addEventListener('change', () => {
+                this.updateChart();
+            });
+        }
+
+        // Role dropdowns
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('role-dropdown')) {
+                const userId = e.target.getAttribute('data-user-id');
+                const newRole = e.target.value;
+                this.updateUserRole(userId, newRole);
+            }
+        });
+
+        // Action buttons
+        document.addEventListener('click', (e) => {
+            const action = e.target.getAttribute('data-action');
+            
+            if (action === 'logout') {
+                this.logout();
+            } else if (action === 'add-user') {
+                this.openUserModal();
+            } else if (action === 'add-product') {
+                this.openProductModal();
+            } else if (action === 'delete-user') {
+                const userId = e.target.getAttribute('data-user-id');
+                this.deleteUser(userId);
+            }
+        });
+
         // Search functionality
         this.setupSearchFilters();
     }
@@ -67,7 +109,7 @@ class AdminDashboard {
         const userSearch = document.getElementById('userSearch');
         if (userSearch) {
             userSearch.addEventListener('input', (e) => {
-                this.filterTable('users', e.target.value);
+                this.filterUserTable(e.target.value);
             });
         }
 
@@ -83,7 +125,7 @@ class AdminDashboard {
         const roleFilter = document.getElementById('roleFilter');
         if (roleFilter) {
             roleFilter.addEventListener('change', (e) => {
-                this.filterTableByRole(e.target.value);
+                this.filterUsersByRole(e.target.value);
             });
         }
 
@@ -125,12 +167,18 @@ class AdminDashboard {
     }
 
     initializeCharts() {
+        // Check if Chart.js is available
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js is not loaded. Charts will not be displayed.');
+            return;
+        }
+        
         this.createSalesChart();
     }
 
     createSalesChart() {
         const ctx = document.getElementById('salesChart');
-        if (!ctx) return;
+        if (!ctx || typeof Chart === 'undefined') return;
 
         // Sample data for the chart
         const data = {
@@ -168,7 +216,13 @@ class AdminDashboard {
             }
         };
 
-        this.salesChart = new Chart(ctx, config);
+        try {
+            this.salesChart = new Chart(ctx, config);
+        } catch (error) {
+            console.error('Error creating chart:', error);
+            // Show a placeholder if chart creation fails
+            ctx.parentElement.innerHTML = '<div class="chart-placeholder">Chart could not be loaded</div>';
+        }
     }
 
     updateChart() {
@@ -190,7 +244,7 @@ class AdminDashboard {
             }
         };
 
-        if (this.salesChart && chartData[period]) {
+        if (this.salesChart && chartData[period] && typeof Chart !== 'undefined') {
             this.salesChart.data.labels = chartData[period].labels;
             this.salesChart.data.datasets[0].data = chartData[period].data;
             this.salesChart.update();
@@ -311,18 +365,123 @@ class AdminDashboard {
 
     // Modal functions
     openUserModal() {
-        alert('User modal would open here');
-        // TODO: Implement user modal
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New User</h3>
+                    <button class="modal-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="newUserEmail">Email:</label>
+                            <input type="email" id="newUserEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserRole">Role:</label>
+                            <select id="newUserRole" required>
+                                <option value="customer">Customer</option>
+                                <option value="staff">Staff</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="newUserPassword">Password:</label>
+                            <input type="password" id="newUserPassword" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="secondary-btn" onclick="closeModal()">Cancel</button>
+                    <button class="primary-btn" onclick="createUser()">Create User</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Focus on email field
+        setTimeout(() => {
+            document.getElementById('newUserEmail').focus();
+        }, 100);
     }
 
-    openProductModal() {
-        alert('Product modal would open here');
-        // TODO: Implement product modal
+    closeModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
+        }
     }
 
-    openInventoryModal() {
-        alert('Inventory modal would open here');
-        // TODO: Implement inventory modal
+    async createUser() {
+        const email = document.getElementById('newUserEmail').value;
+        const role = document.getElementById('newUserRole').value;
+        const password = document.getElementById('newUserPassword').value;
+        
+        if (!email || !role || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('http://localhost:3002/api/users', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, role, password })
+            });
+            
+            if (response.ok) {
+                const newUser = await response.json();
+                
+                // Add user to table
+                const tableBody = document.getElementById('usersTableBody');
+                const userCount = tableBody.children.length + 1;
+                const userId = String(userCount).padStart(2, '0');
+                const currentDate = new Date().toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric'
+                });
+                
+                const row = document.createElement('tr');
+                row.setAttribute('data-user-id', newUser._id || userId);
+                row.innerHTML = `
+                    <td>${userId}</td>
+                    <td>${email}</td>
+                    <td>${currentDate}</td>
+                    <td>
+                        <select class="role-dropdown" onchange="updateUserRole('${newUser._id || userId}', this.value)">
+                            <option value="admin" ${role === 'admin' ? 'selected' : ''}>Admin</option>
+                            <option value="staff" ${role === 'staff' ? 'selected' : ''}>Staff</option>
+                            <option value="customer" ${role === 'customer' ? 'selected' : ''}>Customer</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteUser('${newUser._id || userId}')">Delete</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+                
+                if (window.adminDashboard) {
+                    window.adminDashboard.showNotification('User created successfully', 'success');
+                }
+                
+                this.closeModal();
+            } else {
+                const error = await response.json();
+                alert(`Error: ${error.message}`);
+            }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            alert('Network error. Please try again.');
+        }
     }
 
     // API methods
@@ -422,6 +581,185 @@ class AdminDashboard {
             notification.remove();
         });
     }
+
+    // User Management Functions
+    async updateUserRole(userId, newRole) {
+        const dropdown = document.querySelector(`tr[data-user-id="${userId}"] .role-dropdown`);
+        const originalRole = dropdown.value;
+        
+        // Add loading state
+        dropdown.classList.add('updating');
+        dropdown.disabled = true;
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`http://localhost:3002/api/users/${userId}/role`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ role: newRole })
+            });
+
+            if (response.ok) {
+                this.showNotification(`User role updated to ${newRole}`, 'success');
+                
+                // Update visual feedback
+                dropdown.setAttribute('value', newRole);
+                dropdown.value = newRole;
+                
+                // Log the change
+                console.log(`User ${userId} role updated from ${originalRole} to ${newRole}`);
+            } else {
+                const error = await response.json();
+                this.showNotification(`Failed to update role: ${error.message}`, 'error');
+                
+                // Revert dropdown to original value
+                dropdown.value = originalRole;
+            }
+        } catch (error) {
+            console.error('Error updating user role:', error);
+            this.showNotification('Network error. Please try again.', 'error');
+            
+            // Revert dropdown to original value
+            dropdown.value = originalRole;
+        } finally {
+            // Remove loading state
+            dropdown.classList.remove('updating');
+            dropdown.disabled = false;
+        }
+    }
+
+    async deleteUser(userId) {
+        // Get user email for confirmation
+        const userRow = document.querySelector(`tr[data-user-id="${userId}"]`);
+        const userEmail = userRow.querySelector('td:nth-child(2)').textContent;
+        
+        // Confirm deletion
+        const confirmMessage = `Are you sure you want to delete user "${userEmail}"?\n\nThis action cannot be undone.`;
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`http://localhost:3002/api/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                // Remove user row from table
+                userRow.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => {
+                    userRow.remove();
+                }, 300);
+                
+                this.showNotification(`User ${userEmail} deleted successfully`, 'success');
+                
+                // Update user count if displayed
+                this.updateUserCount();
+            } else {
+                const error = await response.json();
+                this.showNotification(`Failed to delete user: ${error.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            this.showNotification('Network error. Please try again.', 'error');
+        }
+    }
+
+    updateUserCount() {
+        const userRows = document.querySelectorAll('#usersTableBody tr');
+        console.log(`Total users: ${userRows.length}`);
+        
+        // You can add logic here to update any user count displays
+        // For example, update a statistics card if it exists
+    }
+
+    // Enhanced search functionality for users
+    filterUserTable(searchTerm) {
+        const tableBody = document.getElementById('usersTableBody');
+        if (!tableBody) return;
+
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+            const userId = row.cells[0].textContent;
+            const email = row.cells[1].textContent;
+            const role = row.cells[3].querySelector('select').value;
+            
+            const searchText = `${userId} ${email} ${role}`.toLowerCase();
+            const shouldShow = searchText.includes(searchTerm.toLowerCase());
+            
+            row.style.display = shouldShow ? '' : 'none';
+        });
+    }
+
+    // Enhanced role filter functionality
+    filterUsersByRole(selectedRole) {
+        const tableBody = document.getElementById('usersTableBody');
+        if (!tableBody) return;
+
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+            const roleDropdown = row.querySelector('.role-dropdown');
+            const userRole = roleDropdown.value;
+            
+            const shouldShow = !selectedRole || userRole === selectedRole;
+            row.style.display = shouldShow ? '' : 'none';
+        });
+    }
+
+    // Load users from API
+    async loadUsers() {
+        try {
+            const users = await this.fetchUsers();
+            this.renderUsersTable(users);
+        } catch (error) {
+            console.error('Error loading users:', error);
+            this.showNotification('Failed to load users', 'error');
+        }
+    }
+
+    renderUsersTable(users) {
+        const tableBody = document.getElementById('usersTableBody');
+        if (!tableBody) return;
+
+        tableBody.innerHTML = '';
+        
+        users.forEach((user, index) => {
+            const userId = String(index + 1).padStart(2, '0');
+            const createdDate = new Date(user.createdAt).toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric'
+            });
+
+            const row = document.createElement('tr');
+            row.setAttribute('data-user-id', user._id || userId);
+            row.innerHTML = `
+                <td>${userId}</td>
+                <td>${user.email}</td>
+                <td>${createdDate}</td>
+                <td>
+                    <select class="role-dropdown" onchange="updateUserRole('${user._id || userId}', this.value)">
+                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>Staff</option>
+                        <option value="customer" ${user.role === 'customer' ? 'selected' : ''}>Customer</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="delete-btn" onclick="deleteUser('${user._id || userId}')">Delete</button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
 }
 
 // Global functions
@@ -462,6 +800,19 @@ function logout() {
         localStorage.removeItem('userName');
         localStorage.removeItem('rememberMe');
         window.location.href = 'auth.html';
+    }
+}
+
+// Global functions for user management
+function updateUserRole(userId, newRole) {
+    if (window.adminDashboard) {
+        window.adminDashboard.updateUserRole(userId, newRole);
+    }
+}
+
+function deleteUser(userId) {
+    if (window.adminDashboard) {
+        window.adminDashboard.deleteUser(userId);
     }
 }
 

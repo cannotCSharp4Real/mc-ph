@@ -23,19 +23,19 @@
 
             <ul class="sidebar-menu">
                 <li class="menu-item active">
-                    <a href="#" class="menu-link" data-section="sales" onclick="showSection('sales')">
+                    <a href="#" class="menu-link" data-section="sales">
                         <i class="fas fa-chart-line"></i>
                         <span>Sales</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" class="menu-link" data-section="products" onclick="showSection('products')">
+                    <a href="#" class="menu-link" data-section="products">
                         <i class="fas fa-coffee"></i>
                         <span>Products</span>
                     </a>
                 </li>
                 <li class="menu-item">
-                    <a href="#" class="menu-link" data-section="users" onclick="showSection('users')">
+                    <a href="#" class="menu-link" data-section="users">
                         <i class="fas fa-users"></i>
                         <span>Users</span>
                     </a>
@@ -52,7 +52,7 @@
                         <span class="user-role">Administrator</span>
                     </div>
                 </div>
-                <button class="logout-btn" onclick="logout()">
+                <button class="logout-btn" data-action="logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </button>
@@ -71,7 +71,7 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <button class="logout-btn" onclick="logout()" style="background: none; border: 1px solid #ddd; color: #666; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                    <button class="logout-btn" data-action="logout" style="background: none; border: 1px solid #ddd; color: #666; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
                         Logout
                     </button>
                 </div>
@@ -118,14 +118,13 @@
                     <div class="charts-grid">
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>Sales Chart</h3>
-                                <div class="chart-controls">
-                                    <select id="chartPeriod" onchange="updateChart()">
-                                        <option value="daily">Daily</option>
-                                        <option value="monthly" selected>Monthly</option>
-                                        <option value="yearly">Yearly</option>
-                                    </select>
-                                </div>
+                                <h3>Sales Chart</h3>                            <div class="chart-controls">
+                                <select id="chartPeriod">
+                                    <option value="daily">Daily</option>
+                                    <option value="monthly" selected>Monthly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                            </div>
                             </div>
                             <div class="chart-content">
                                 <canvas id="salesChart" width="400" height="200"></canvas>
@@ -216,7 +215,7 @@
                 <section id="products-section" class="content-section">
                     <div class="section-header">
                         <h2>Products Management</h2>
-                        <button class="primary-btn" onclick="openProductModal()">
+                        <button class="primary-btn" data-action="add-product">
                             <i class="fas fa-plus"></i>
                             Add New Product
                         </button>
@@ -303,7 +302,7 @@
                 <section id="users-section" class="content-section">
                     <div class="section-header">
                         <h2>Users Management</h2>
-                        <button class="primary-btn" onclick="openUserModal()">
+                        <button class="primary-btn" data-action="add-user">
                             <i class="fas fa-plus"></i>
                             Add New User
                         </button>
@@ -326,52 +325,57 @@
                             <table id="usersTable">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
+                                        <th>User ID</th>
                                         <th>Email</th>
+                                        <th>Date Created</th>
                                         <th>Role</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="usersTableBody">
-                                    <tr>
-                                        <td>John Doe</td>
-                                        <td>john@example.com</td>
-                                        <td>Customer</td>
-                                        <td><span class="status-badge active">Active</span></td>
-                                        <td>2024-01-15</td>
+                                    <tr data-user-id="01">
+                                        <td>01</td>
+                                        <td>admin@makecoffee.com</td>
+                                        <td>07/13/2025</td>
                                         <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn-small edit-btn">Edit</button>
-                                                <button class="action-btn-small delete-btn">Delete</button>
-                                            </div>
+                                            <select class="role-dropdown" data-user-id="01">
+                                                <option value="admin" selected>Admin</option>
+                                                <option value="staff">Staff</option>
+                                                <option value="customer">Customer</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="delete-btn" data-user-id="01" data-action="delete-user">Delete</button>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td>Jane Smith</td>
-                                        <td>jane@example.com</td>
-                                        <td>Staff</td>
-                                        <td><span class="status-badge active">Active</span></td>
-                                        <td>2024-01-10</td>
+                                    <tr data-user-id="02">
+                                        <td>02</td>
+                                        <td>staff@makecoffee.com</td>
+                                        <td>07/13/2025</td>
                                         <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn-small edit-btn">Edit</button>
-                                                <button class="action-btn-small delete-btn">Delete</button>
-                                            </div>
+                                            <select class="role-dropdown" data-user-id="02">
+                                                <option value="admin">Admin</option>
+                                                <option value="staff" selected>Staff</option>
+                                                <option value="customer">Customer</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="delete-btn" data-user-id="02" data-action="delete-user">Delete</button>
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td>Admin User</td>
-                                        <td>admin@mcph.com</td>
-                                        <td>Admin</td>
-                                        <td><span class="status-badge active">Active</span></td>
-                                        <td>2024-01-01</td>
+                                    <tr data-user-id="03">
+                                        <td>03</td>
+                                        <td>customer@makecoffee.com</td>
+                                        <td>07/13/2025</td>
                                         <td>
-                                            <div class="action-buttons">
-                                                <button class="action-btn-small edit-btn">Edit</button>
-                                                <button class="action-btn-small delete-btn">Delete</button>
-                                            </div>
+                                            <select class="role-dropdown" data-user-id="03">
+                                                <option value="admin">Admin</option>
+                                                <option value="staff">Staff</option>
+                                                <option value="customer" selected>Customer</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="delete-btn" data-user-id="03" data-action="delete-user">Delete</button>
                                         </td>
                                     </tr>
                                 </tbody>
