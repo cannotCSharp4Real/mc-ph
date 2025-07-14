@@ -3,270 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MC-PH Coffee Shop - Customer Dashboard</title>
+    <title>MC-PH Coffee Shop - Welcome</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="css/customer.css">
+    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/customer-landing.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Header -->
-        <header class="top-header">
-            <div class="header-left">
+    <!-- Header/Navigation -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-left">
                 <div class="logo">
-                    <i class="fas fa-coffee"></i>
-                    <span>MC-PH Coffee Shop</span>
+                    <img src="images/logo.svg" alt="MC-PH Logo" class="logo-img">
                 </div>
             </div>
-            <nav class="main-nav">
-                <ul class="nav-menu">
-                    <li class="nav-item active">
-                        <a href="#menu" class="nav-link" data-section="menu">
-                            <i class="fas fa-list"></i>
-                            <span>Menu</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#orders" class="nav-link" data-section="orders">
-                            <i class="fas fa-receipt"></i>
-                            <span>My Orders</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#favorites" class="nav-link" data-section="favorites">
-                            <i class="fas fa-heart"></i>
-                            <span>Favorites</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#profile" class="nav-link" data-section="profile">
-                            <i class="fas fa-user"></i>
-                            <span>Profile</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="header-right">
-                <div class="header-actions">
-                    <button class="cart-btn" onclick="toggleCart()">
+            <div class="nav-right">
+                <div class="nav-actions">
+                    <button class="cart-btn" id="cartButton">
                         <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-count" id="cartCount">0</span>
                     </button>
-                    <div class="user-menu">
-                        <button class="user-btn" onclick="toggleUserMenu()">
-                            <div class="user-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <span id="userName">Customer</span>
-                            <i class="fas fa-chevron-down"></i>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileButton">
+                            <i class="fas fa-user"></i>
                         </button>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="#profile" class="dropdown-item">
-                                <i class="fas fa-user"></i>
-                                Profile
-                            </a>
-                            <a href="#orders" class="dropdown-item">
-                                <i class="fas fa-receipt"></i>
-                                My Orders
-                            </a>
-                            <a href="#settings" class="dropdown-item">
-                                <i class="fas fa-cog"></i>
-                                Settings
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item" onclick="logout()">
-                                <i class="fas fa-sign-out-alt"></i>
-                                Logout
-                            </a>
+                        <div class="dropdown-menu" id="profileDropdown">
+                            <a href="#" class="dropdown-item" id="myProfileLink">My Profile</a>
+                            <a href="#" class="dropdown-item" id="logoutLink">Logout</a>
                         </div>
                     </div>
                 </div>
             </div>
-        </header>
+        </nav>
+    </header>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Menu Section -->
-            <section id="menu-section" class="content-section active">
-                <div class="section-header">
-                    <h1>Our Menu</h1>
-                    <p>Discover our premium coffee collection</p>
-                </div>
-
-                <div class="menu-filters">
-                    <div class="filter-tabs">
-                        <button class="filter-btn active" data-category="all">All</button>
-                        <button class="filter-btn" data-category="coffee">Coffee</button>
-                        <button class="filter-btn" data-category="tea">Tea</button>
-                        <button class="filter-btn" data-category="pastries">Pastries</button>
-                        <button class="filter-btn" data-category="sandwiches">Sandwiches</button>
-                    </div>
-                    <div class="menu-search">
-                        <input type="text" placeholder="Search menu..." id="menuSearch">
-                        <i class="fas fa-search"></i>
-                    </div>
-                </div>
-
-                <div class="menu-grid" id="menuGrid">
-                    <!-- Menu items will be loaded here -->
-                </div>
-            </section>
-
-            <!-- Orders Section -->
-            <section id="orders-section" class="content-section">
-                <div class="section-header">
-                    <h1>My Orders</h1>
-                    <p>Track your order history and status</p>
-                </div>
-
-                <div class="orders-tabs">
-                    <button class="tab-btn active" data-status="all">All Orders</button>
-                    <button class="tab-btn" data-status="pending">Pending</button>
-                    <button class="tab-btn" data-status="processing">Processing</button>
-                    <button class="tab-btn" data-status="completed">Completed</button>
-                </div>
-
-                <div class="orders-list" id="ordersList">
-                    <!-- Orders will be loaded here -->
-                </div>
-            </section>
-
-            <!-- Favorites Section -->
-            <section id="favorites-section" class="content-section">
-                <div class="section-header">
-                    <h1>My Favorites</h1>
-                    <p>Your favorite coffee selections</p>
-                </div>
-
-                <div class="favorites-grid" id="favoritesGrid">
-                    <!-- Favorite items will be loaded here -->
-                </div>
-            </section>
-
-            <!-- Profile Section -->
-            <section id="profile-section" class="content-section">
-                <div class="section-header">
-                    <h1>My Profile</h1>
-                    <p>Manage your account information</p>
-                </div>
-
-                <div class="profile-content">
-                    <div class="profile-card">
-                        <div class="profile-header">
-                            <div class="profile-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="profile-info">
-                                <h2 id="profileName">John Doe</h2>
-                                <p id="profileEmail">john@example.com</p>
-                                <span class="profile-status">Premium Member</span>
-                            </div>
-                        </div>
-
-                        <div class="profile-stats">
-                            <div class="stat-item">
-                                <div class="stat-number">127</div>
-                                <div class="stat-label">Orders</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">₱12,450</div>
-                                <div class="stat-label">Total Spent</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">8</div>
-                                <div class="stat-label">Favorites</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="profile-forms">
-                        <div class="form-card">
-                            <h3>Personal Information</h3>
-                            <form id="profileForm">
-                                <div class="form-group">
-                                    <label>Full Name</label>
-                                    <input type="text" id="fullName" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Email</label>
-                                    <input type="email" id="email" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Phone</label>
-                                    <input type="tel" id="phone">
-                                </div>
-                                <div class="form-group">
-                                    <label>Address</label>
-                                    <textarea id="address" rows="3"></textarea>
-                                </div>
-                                <button type="submit" class="primary-btn">Update Profile</button>
-                            </form>
-                        </div>
-
-                        <div class="form-card">
-                            <h3>Change Password</h3>
-                            <form id="passwordForm">
-                                <div class="form-group">
-                                    <label>Current Password</label>
-                                    <input type="password" id="currentPassword" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>New Password</label>
-                                    <input type="password" id="newPassword" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Confirm New Password</label>
-                                    <input type="password" id="confirmPassword" required>
-                                </div>
-                                <button type="submit" class="primary-btn">Change Password</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Shopping Cart Sidebar -->
-        <div class="cart-sidebar" id="cartSidebar">
-            <div class="cart-header">
-                <h3>Your Cart</h3>
-                <button class="close-cart" onclick="toggleCart()">
-                    <i class="fas fa-times"></i>
-                </button>
+    <!-- Hero Section -->
+    <main class="hero-section">
+        <div class="hero-background">
+            <img src="images/storefront.jpg" alt="MC-PH Coffee Shop" class="hero-image">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <h1 class="hero-welcome-text">welcome to make coffee!</h1>
             </div>
-            <div class="cart-content">
-                <div class="cart-items" id="cartItems">
-                    <!-- Cart items will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Our Top Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <h2 class="section-title">Our Top Products</h2>
+            <div class="products-grid">
+                <div class="product-card">
+                    <div class="product-placeholder"></div>
                 </div>
-                <div class="cart-footer">
-                    <div class="cart-total">
-                        <div class="total-row">
-                            <span>Subtotal:</span>
-                            <span id="cartSubtotal">₱0.00</span>
-                        </div>
-                        <div class="total-row">
-                            <span>Tax:</span>
-                            <span id="cartTax">₱0.00</span>
-                        </div>
-                        <div class="total-row total-main">
-                            <span>Total:</span>
-                            <span id="cartTotal">₱0.00</span>
-                        </div>
-                    </div>
-                    <button class="checkout-btn" onclick="proceedToCheckout()">
-                        <i class="fas fa-credit-card"></i>
-                        Proceed to Checkout
-                    </button>
+                <div class="product-card">
+                    <div class="product-placeholder"></div>
+                </div>
+                <div class="product-card">
+                    <div class="product-placeholder"></div>
+                </div>
+                <div class="product-card">
+                    <div class="product-placeholder"></div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- Cart Overlay -->
-        <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
-    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="footer-info">
+                        <p>SEC & IPO regd. est. 2021</p>
+                        <p>Always Bean Good</p>
+                        <p>Open Daily 7am-11pm</p>
+                        <p>FREE DELIVERY w/n Marikina</p>
+                        <p>30 JP Laurel Sr. St San Roque Marikina City</p>
+                    </div>
+                </div>
+                <div class="footer-right">
+                    <div class="social-links">
+                        <a href="#" class="social-link">Facebook</a>
+                        <a href="#" class="social-link">Instagram</a>
+                        <a href="#" class="social-link">Threads</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    <!-- Modals will be dynamically created here -->
-    <div id="modalContainer"></div>
-
-    <script src="js/customer.js"></script>
+    <!-- Scripts -->
+    <script src="js/landing.js"></script>
+    <script src="js/customer-landing.js"></script>
 </body>
 </html>

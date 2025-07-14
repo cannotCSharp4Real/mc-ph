@@ -87,7 +87,8 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center;
+    object-position: center center;
+    filter: brightness(0.8);
 }
 
 .hero-overlay {
@@ -96,7 +97,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .hero-content {
@@ -106,6 +107,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    height: 100%;
     gap: 30px;
 }
 
@@ -133,6 +136,47 @@ body {
 .browse-btn:hover {
     background: #f8f9fa;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Hero Browse Button - Centered */
+.hero-browse-btn {
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    padding: 15px 35px;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 3;
+}
+
+.hero-browse-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.hero-browse-btn:active {
+    transform: translateY(0);
+}
+
+/* Hero Welcome Text */
+.hero-welcome-text {
+    font-size: 3rem;
+    font-weight: 400;
+    color: white;
+    text-align: center;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
 }
 
 /* Products Section */
@@ -238,6 +282,11 @@ body {
         font-size: 2.5rem;
     }
     
+    .hero-welcome-text {
+        color: white;
+        font-size: 2rem;
+    }
+    
     .products-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
@@ -260,6 +309,10 @@ body {
 @media (max-width: 480px) {
     .hero-title {
         font-size: 2rem;
+    }
+    
+    .hero-welcome-text {
+        font-size: 1.5rem;
     }
     
     .products-grid {
