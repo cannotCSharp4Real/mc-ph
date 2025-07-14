@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC-PH Coffee Shop - Always Bean Good</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/landing.css">
+</head>
+<body>
+    <!-- Header/Navigation -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-left">
+                <div class="logo">
+                    <div class="sun-icon">
+                        <div class="sun-center"></div>
+                        <div class="sun-rays">
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                        </div>
+                    </div>
+                    <span class="brand-name">MC-PH</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <button class="auth-btn" onclick="window.location.href='auth.html'">
+                    Sign In / Sign Up
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="hero-section">
+        <div class="hero-background">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">make coffee</h1>
+                    <p class="hero-tagline">Always Bean Good ☕</p>
+                    <p class="hero-description">Discover our premium coffee collection made with love and expertise</p>
+                </div>
+                <div class="hero-actions">
+                    <button class="browse-btn" onclick="browseMenu()">
+                        <span>Browse</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-coffee"></i>
+                    </div>
+                    <h3>Premium Coffee</h3>
+                    <p>Carefully selected beans roasted to perfection for the ultimate coffee experience</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h3>Free Delivery</h3>
+                    <p>Complimentary delivery within Marikina City for orders above minimum amount</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Daily Fresh</h3>
+                    <p>Open daily from 7am to 11pm, serving fresh coffee throughout the day</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Preview Section -->
+    <section class="menu-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Menu</h2>
+                <p>Explore our signature drinks and delicious treats</p>
+            </div>
+            <div class="menu-categories">
+                <div class="category-card" data-category="espresso">
+                    <div class="category-image">
+                        <div class="category-placeholder">
+                            <i class="fas fa-coffee"></i>
+                        </div>
+                    </div>
+                    <h3>Espresso</h3>
+                    <p>Rich, bold shots of pure coffee excellence</p>
+                </div>
+                <div class="category-card" data-category="milkshakes">
+                    <div class="category-image">
+                        <div class="category-placeholder">
+                            <i class="fas fa-glass-whiskey"></i>
+                        </div>
+                    </div>
+                    <h3>Milkshakes</h3>
+                    <p>Creamy, indulgent treats for every sweet tooth</p>
+                </div>
+                <div class="category-card" data-category="pastries">
+                    <div class="category-image">
+                        <div class="category-placeholder">
+                            <i class="fas fa-cookie-bite"></i>
+                        </div>
+                    </div>
+                    <h3>Pastries</h3>
+                    <p>Fresh baked goods to complement your coffee</p>
+                </div>
+            </div>
+            <div class="menu-cta">
+                <button class="view-menu-btn" onclick="browseMenu()">
+                    View Full Menu
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <div class="footer-section">
+                        <h4>Business Information</h4>
+                        <p>SEC & IPO regd. est. 2021</p>
+                        <p class="tagline">Always Bean Good ☕</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Operating Hours</h4>
+                        <p>Open Daily 7am-11pm</p>
+                        <p>FREE DELIVERY w/n Marikina</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Location</h4>
+                        <p>30 JP Laurel Sr. St</p>
+                        <p>San Roque Marikina City</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Follow Us</h4>
+                        <div class="social-links">
+                            <a href="#" class="social-link">
+                                <i class="fab fa-facebook"></i>
+                                Facebook
+                            </a>
+                            <a href="#" class="social-link">
+                                <i class="fab fa-instagram"></i>
+                                Instagram
+                            </a>
+                            <a href="#" class="social-link">
+                                <i class="fab fa-threads"></i>
+                                Threads
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 MC-PH Coffee Shop. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/landing.js"></script>
+    
+    <!-- Add some additional interactive elements -->
+    <script>
+        // Add click handlers for category cards
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const category = this.getAttribute('data-category') || 
+                                this.querySelector('h3').textContent.toLowerCase();
+                viewCategory(category);
+            });
+        });
+
+        // Add hover effects for interactive elements
+        document.querySelectorAll('.cta-button, .category-card').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // Close any open notifications
+                document.querySelectorAll('.notification').forEach(n => n.remove());
+            }
+        });
+    </script>
+</body>
+</html>
