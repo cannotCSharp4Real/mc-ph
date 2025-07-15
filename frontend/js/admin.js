@@ -46,6 +46,8 @@ function initializeDashboard() {
                 // Initialize section-specific functionality
                 if (sectionId === 'products-section') {
                     initializeProductManagement();
+                } else if (sectionId === 'users-section') {
+                    initializeUserManagement();
                 }
             }
         });
@@ -440,6 +442,11 @@ let currentProducts = [];
 let currentCategory = 'drinks';
 let editingProductId = null;
 let cropImageData = null;
+
+// User Management Variables
+let currentUsers = [];
+let editingUserId = null;
+let currentRoleFilter = '';
 
 // Product Management Functions
 function initializeProductManagement() {
@@ -892,4 +899,260 @@ function showNotification(message, type = 'info') {
             document.body.removeChild(notification);
         }, 300);
     }, 3000);
+}
+
+// User Management Functions
+function initializeUserManagement() {
+    // Add User button
+    const addUserBtn = document.getElementById('addUserBtn');
+    if (addUserBtn) {
+        addUserBtn.addEventListener('click', openAddUserModal);
+    }
+    
+    // User modal close buttons
+    const closeUserModalBtn = document.getElementById('closeUserModalBtn');
+    const cancelUserBtn = document.getElementById('cancelUserBtn');
+    if (closeUserModalBtn) {
+        closeUserModalBtn.addEventListener('click', closeUserModal);
+    }
+    if (cancelUserBtn) {
+        cancelUserBtn.addEventListener('click', closeUserModal);
+    }
+    
+    // User form submission
+    const userForm = document.getElementById('userForm');
+    if (userForm) {
+        userForm.addEventListener('submit', handleUserSubmit);
+    }
+    
+    // Role filter
+    const roleFilter = document.getElementById('userRoleFilter');
+    if (roleFilter) {
+        roleFilter.addEventListener('change', function() {
+            currentRoleFilter = this.value;
+            loadUsers();
+        });
+    }
+    
+    // Load initial users
+    loadUsers();
+}
+
+// Load users from API
+async function loadUsers() {
+    try {
+        const response = await apiRequest('/users');
+        currentUsers = response;
+        
+        // Apply role filter if set
+        let filteredUsers = currentUsers;
+        if (currentRoleFilter) {
+            filteredUsers = currentUsers.filter(user => user.role === currentRoleFilter);
+        }
+        
+        renderUsers(filteredUsers);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        renderUsers([]);
+    }
+}
+
+// Render users in the table
+function renderUsers(users) {
+    const usersTableBody = document.getElementById('usersTableBody');
+    const noUsersMessage = document.getElementById('noUsersMessage');
+    
+    if (!usersTableBody) return;
+    
+    if (users.length === 0) {
+        usersTableBody.innerHTML = '';
+        noUsersMessage.style.display = 'block';
+        return;
+    }
+    
+    noUsersMessage.style.display = 'none';
+    
+    usersTableBody.innerHTML = users.map(user => `
+        <tr>
+            <td>#${user._id.slice(-6)}</td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>
+                <select class="role-dropdown" data-user-id="${user._id}" data-current-role="${user.role}">
+                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                    <option value="staff" ${user.role === 'staff' ? 'selected' : ''}>Staff</option>
+                    <option value="customer" ${user.role === 'customer' ? 'selected' : ''}>Customer</option>
+                </select>
+            </td>
+            <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td>
+                <div class="user-actions">
+                    <button class="action-btn user-edit-btn" data-user-id="${user._id}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="action-btn user-delete-btn" data-user-id="${user._id}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    // Add event listeners for role dropdowns
+    usersTableBody.querySelectorAll('.role-dropdown').forEach(dropdown => {
+        dropdown.addEventListener('change', function() {
+            const userId = this.getAttribute('data-user-id');
+            const currentRole = this.getAttribute('data-current-role');
+            const newRole = this.value;
+            
+            if (newRole !== currentRole) {
+                updateUserRole(userId, newRole);
+            }
+        });
+    });
+    
+    // Add event listeners for edit buttons
+    usersTableBody.querySelectorAll('.user-edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            editUser(userId);
+        });
+    });
+    
+    // Add event listeners for delete buttons
+    usersTableBody.querySelectorAll('.user-delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            deleteUser(userId);
+        });
+    });
+}
+
+// Open add user modal
+function openAddUserModal() {
+    editingUserId = null;
+    document.getElementById('userModalTitle').textContent = 'Add User';
+    document.getElementById('userSubmitBtnText').textContent = 'Add User';
+    document.getElementById('userForm').reset();
+    
+    // Show password field for new users
+    document.getElementById('passwordGroup').style.display = 'block';
+    document.getElementById('userPassword').required = true;
+    
+    document.getElementById('userModal').style.display = 'block';
+}
+
+// Edit user
+function editUser(userId) {
+    const user = currentUsers.find(u => u._id === userId);
+    if (!user) return;
+    
+    editingUserId = userId;
+    document.getElementById('userModalTitle').textContent = 'Edit User';
+    document.getElementById('userSubmitBtnText').textContent = 'Update User';
+    
+    // Split name into firstName and lastName
+    const nameParts = user.name.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' '); // Handle multiple last names
+    
+    // Fill form fields
+    document.getElementById('userFirstName').value = firstName;
+    document.getElementById('userLastName').value = lastName;
+    document.getElementById('userEmail').value = user.email;
+    document.getElementById('userRole').value = user.role;
+    
+    // Hide password field for editing
+    document.getElementById('passwordGroup').style.display = 'none';
+    document.getElementById('userPassword').required = false;
+    
+    document.getElementById('userModal').style.display = 'block';
+}
+
+// Delete user
+async function deleteUser(userId) {
+    const user = currentUsers.find(u => u._id === userId);
+    if (!user) return;
+    
+    if (!confirm(`Are you sure you want to delete user "${user.name}"?`)) return;
+    
+    try {
+        await apiRequest(`/users/${userId}`, { method: 'DELETE' });
+        loadUsers();
+        showNotification('User deleted successfully!', 'success');
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showNotification('Error deleting user. Please try again.', 'error');
+    }
+}
+
+// Update user role
+async function updateUserRole(userId, newRole) {
+    try {
+        await apiRequest(`/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ role: newRole })
+        });
+        
+        // Update the current users array
+        const userIndex = currentUsers.findIndex(u => u._id === userId);
+        if (userIndex !== -1) {
+            currentUsers[userIndex].role = newRole;
+        }
+        
+        showNotification('User role updated successfully!', 'success');
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        showNotification('Error updating user role. Please try again.', 'error');
+        
+        // Revert the dropdown selection
+        const dropdown = document.querySelector(`[data-user-id="${userId}"]`);
+        if (dropdown) {
+            dropdown.value = dropdown.getAttribute('data-current-role');
+        }
+    }
+}
+
+// Handle user form submission
+async function handleUserSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const userData = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        email: formData.get('email'),
+        role: formData.get('role')
+    };
+    
+    // Add password for new users
+    if (!editingUserId) {
+        userData.password = formData.get('password');
+    }
+    
+    console.log('Submitting user data:', userData);
+    
+    try {
+        const method = editingUserId ? 'PUT' : 'POST';
+        const url = editingUserId ? `/users/${editingUserId}` : '/users';
+        
+        await apiRequest(url, {
+            method,
+            body: JSON.stringify(userData)
+        });
+        
+        closeUserModal();
+        loadUsers();
+        showNotification(`User ${editingUserId ? 'updated' : 'created'} successfully!`, 'success');
+    } catch (error) {
+        console.error('Error saving user:', error);
+        showNotification('Error saving user. Please try again.', 'error');
+    }
+}
+
+// Close user modal
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+    editingUserId = null;
+    document.getElementById('userForm').reset();
 }
