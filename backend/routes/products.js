@@ -1,12 +1,46 @@
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../config/database');
+const { getDB } = require('../config/databaseMongoose');
+const jwt = require('jsonwebtoken');
+
+// Middleware for JWT token verification
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) {
+        return res.status(401).json({ message: 'Access token required' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid or expired token' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
+// Middleware for admin role verification
+const requireAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+};
 
 // GET /api/products - Get all products
 router.get('/', async (req, res) => {
     try {
         const db = getDB();
-        const products = await db.collection('products').find({}).toArray();
+        const { category } = req.query;
+        
+        let filter = {};
+        if (category) {
+            filter.category = category;
+        }
+        
+        const products = await db.collection('products').find(filter).toArray();
         res.json(products);
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -33,21 +67,48 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/products - Create new product (admin only)
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const db = getDB();
-        const { name, description, price, category, image, inStock } = req.body;
+        const { name, description, category, image, inStock, price, sizes } = req.body;
+        
+        console.log('Creating product with data:', req.body);
+        
+        // Validate required fields
+        if (!name || !category) {
+            console.log('Validation failed: Name and category are required');
+            return res.status(400).json({ message: 'Name and category are required' });
+        }
+        
+        // Validate category-specific fields
+        if (category === 'drinks' && (!sizes || sizes.length === 0)) {
+            console.log('Validation failed: Drinks must have at least one size');
+            return res.status(400).json({ message: 'Drinks must have at least one size' });
+        }
+        
+        if ((category === 'food' || category === 'add-ons') && !price) {
+            console.log('Validation failed: Price is required for food and add-ons. Price value:', price);
+            return res.status(400).json({ message: 'Price is required for food and add-ons' });
+        }
         
         const newProduct = {
             name,
-            description,
-            price: parseFloat(price),
+            description: description || '',
             category,
-            image,
+            image: image || null,
             inStock: inStock !== undefined ? inStock : true,
             createdAt: new Date(),
             updatedAt: new Date()
         };
+        
+        // Add category-specific fields
+        if (category === 'drinks') {
+            newProduct.sizes = sizes;
+        } else {
+            newProduct.price = parseFloat(price);
+        }
+        
+        console.log('Final product object:', newProduct);
         
         const result = await db.collection('products').insertOne(newProduct);
         res.status(201).json({ ...newProduct, _id: result.insertedId });
@@ -58,25 +119,40 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/products/:id - Update product (admin only)
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const db = getDB();
         const { ObjectId } = require('mongodb');
-        const { name, description, price, category, image, inStock } = req.body;
+        const { name, description, category, image, inStock, price, sizes } = req.body;
+        
+        // Validate required fields
+        if (!name || !category) {
+            return res.status(400).json({ message: 'Name and category are required' });
+        }
         
         const updateData = {
             name,
-            description,
-            price: parseFloat(price),
+            description: description || '',
             category,
-            image,
-            inStock,
+            image: image || null,
+            inStock: inStock !== undefined ? inStock : true,
             updatedAt: new Date()
         };
         
+        // Add category-specific fields
+        if (category === 'drinks') {
+            updateData.sizes = sizes;
+            // Remove price field if it exists
+            updateData.$unset = { price: "" };
+        } else {
+            updateData.price = parseFloat(price);
+            // Remove sizes field if it exists
+            updateData.$unset = { sizes: "" };
+        }
+        
         const result = await db.collection('products').updateOne(
             { _id: new ObjectId(req.params.id) },
-            { $set: updateData }
+            { $set: updateData, ...(updateData.$unset && { $unset: updateData.$unset }) }
         );
         
         if (result.matchedCount === 0) {
@@ -91,7 +167,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/products/:id - Delete product (admin only)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const db = getDB();
         const { ObjectId } = require('mongodb');

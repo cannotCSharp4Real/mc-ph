@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../config/database');
+const { getDB } = require('../config/databaseMongoose');
 
 // GET /api/users - Get all users (admin only)
 router.get('/', async (req, res) => {

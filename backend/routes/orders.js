@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../config/database');
+const { getDB } = require('../config/databaseMongoose');
 
 // GET /api/orders - Get all orders for a user
 router.get('/', async (req, res) => {

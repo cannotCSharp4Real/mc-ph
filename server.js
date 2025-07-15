@@ -14,7 +14,9 @@ const app = express();
 connectDB();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false // Disable CSP for development
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -41,7 +43,8 @@ app.use('/api/test', require('./backend/routes/test'));
 app.use('/api/products', require('./backend/routes/products'));
 app.use('/api/orders', require('./backend/routes/orders'));
 app.use('/api/users', require('./backend/routes/users'));
-app.use('/api/auth', require('./backend/routes/auth').router || require('./backend/routes/auth'));
+app.use('/api/sales', require('./backend/routes/sales'));
+app.use('/api/auth', require('./backend/routes/auth').router);
 
 // Serve frontend for all other routes (SPA support)
 app.get('*', (req, res) => {
