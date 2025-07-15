@@ -1,0 +1,31 @@
+{
+  "name": "mc-ph-coffee-shop",
+  "version": "1.0.0",
+  "description": "MC-PH Coffee Shop - Complete ordering system with authentication",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "coffee",
+    "shop",
+    "ordering",
+    "system",
+    "authentication"
+  ],
+  "author": "MC-PH Coffee Shop",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.0",
+    "mongodb": "^5.6.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
