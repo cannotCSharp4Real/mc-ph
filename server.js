@@ -48,7 +48,6 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Routes
-app.use('/api/test', require('./backend/routes/test'));
 app.use('/api/products', require('./backend/routes/products'));
 app.use('/api/orders', require('./backend/routes/orders'));
 app.use('/api/users', require('./backend/routes/users'));

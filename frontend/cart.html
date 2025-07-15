@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart & Checkout - MC-PH Coffee Shop</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="navbar">
+            <div class="nav-left">
+                <div class="logo">
+                    <img src="images/logo.svg" alt="MC-PH Logo" class="logo-img">
+                </div>
+            </div>
+            <div class="nav-center">
+                <!-- Empty for centered layout -->
+            </div>
+            <div class="nav-right">
+                <div class="nav-actions">
+                    <button class="cart-btn" id="cartBtn">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count" id="cartCount">2</span>
+                    </button>
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <div class="dropdown-menu" id="profileDropdown">
+                            <a href="profile.html" class="dropdown-item">Profile</a>
+                            <a href="orders.html" class="dropdown-item">Orders</a>
+                            <a href="#" class="dropdown-item" onclick="logout()">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Cart Items Section -->
+            <div class="cart-container">
+                <div class="cart-items-section" id="cartItemsSection">
+                    <!-- Sample Cart Items -->
+                    <div class="cart-item-card">
+                        <div class="cart-item-header">
+                            <div class="cart-item-info">
+                                <div class="cart-item-name">Spanish Latte</div>
+                                <div class="cart-item-size">Large ₱95</div>
+                            </div>
+                            <div class="cart-item-price">₱185</div>
+                        </div>
+                        <div class="cart-item-addons">
+                            <div class="addon-item">
+                                <span class="addon-name">Espresso Shot</span>
+                                <span class="addon-price">₱30</span>
+                            </div>
+                            <div class="addon-item">
+                                <span class="addon-name">Ice Cream</span>
+                                <span class="addon-price">₱40</span>
+                            </div>
+                        </div>
+                        <div class="cart-item-controls">
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="updateQuantity(0, -1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="quantity-display">1</span>
+                                <button class="quantity-btn" onclick="updateQuantity(0, 1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cart-item-card">
+                        <div class="cart-item-header">
+                            <div class="cart-item-info">
+                                <div class="cart-item-name">Grilled Cheese</div>
+                                <div class="cart-item-size">₱150</div>
+                            </div>
+                            <div class="cart-item-price">₱150</div>
+                        </div>
+                        <div class="cart-item-controls">
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="updateQuantity(1, -1)">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <span class="quantity-display">1</span>
+                                <button class="quantity-btn" onclick="updateQuantity(1, 1)">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span class="summary-label">Items Total</span>
+                        <span class="summary-value">₱345</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span class="summary-label">Total</span>
+                        <span class="summary-value">₱345</span>
+                    </div>
+                </div>
+                
+                <!-- Empty cart state -->
+                <div class="empty-cart" id="emptyCart" style="display: none;">
+                    <div class="empty-cart-content">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>Your cart is empty</h3>
+                        <p>Add some delicious items from our menu to get started!</p>
+                        <a href="menu.html" class="browse-menu-btn">Browse Menu</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout Form -->
+            <div class="checkout-container">
+                <div class="checkout-form-card">
+                    <form id="checkoutForm">
+                        <!-- Order Type Toggle -->
+                        <div class="order-type-section">
+                            <div class="order-type-toggle">
+                                <button type="button" class="order-type-btn active" data-type="pickup">Pickup</button>
+                                <button type="button" class="order-type-btn" data-type="delivery">Delivery</button>
+                            </div>
+                        </div>
+
+                        <!-- Customer Information (Hidden by default for pickup) -->
+                        <div class="customer-info-section" id="customerInfoSection" style="display: none;">
+                            <div class="form-group">
+                                <input type="text" id="customerName" name="customerName" placeholder="Name" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="customerAddress" name="customerAddress" placeholder="Address" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" id="customerPhone" name="customerPhone" placeholder="Phone No." required>
+                            </div>
+                        </div>
+
+                        <!-- Place Order Button -->
+                        <div class="place-order-section">
+                            <button type="submit" class="place-order-btn" id="placeOrderBtn">
+                                Place Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-info">
+                <p class="footer-reg">SEC & IPO regd. est. 2021</p>
+                <p class="footer-tagline">Always Bean Good ☕</p>
+                <p class="footer-hours">Open Daily 7am-11pm</p>
+                <p class="footer-delivery">FREE DELIVERY w/n Marikina</p>
+                <p class="footer-address">30 JP Laurel Sr. St San Roque Marikina City</p>
+            </div>
+            <div class="footer-social">
+                <a href="#" class="social-link">Facebook</a>
+                <a href="#" class="social-link">Instagram</a>
+                <a href="#" class="social-link">Threads</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Order Placed Successfully!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Thank you for your order! We'll prepare it shortly.</p>
+                <div class="order-details">
+                    <p><strong>Order #:</strong> <span id="orderNumber"></span></p>
+                    <p><strong>Estimated ready time:</strong> <span id="readyTime"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="location.href='menu.html'">Back to Menu</button>
+                <button class="btn btn-secondary" onclick="closeModal('successModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Order Error</h3>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage">An error occurred while processing your order. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('errorModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/cart.js"></script>
+</body>
+</html>
