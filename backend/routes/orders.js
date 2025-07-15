@@ -3,14 +3,23 @@ const router = express.Router();
 const { getDB } = require('../config/database');
 const Order = require('../models/Order');
 
-// GET /api/orders - Get all orders for a user
+// GET /api/orders - Get all orders with optional status filtering
 router.get('/', async (req, res) => {
     try {
         const db = getDB();
-        // In a real app, you'd get the user ID from the JWT token
-        const userId = req.query.userId;
+        const { status, userId } = req.query;
         
-        const orders = await db.collection('orders').find({ userId }).sort({ orderDate: -1 }).toArray();
+        let query = {};
+        
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        
+        if (userId) {
+            query.userId = userId;
+        }
+        
+        const orders = await db.collection('orders').find(query).sort({ createdAt: -1 }).toArray();
         res.json(orders);
     } catch (error) {
         console.error('Error fetching orders:', error);
@@ -42,8 +51,12 @@ router.post('/', async (req, res) => {
         const db = getDB();
         const orderData = req.body;
         
+        // Generate order number
+        const orderNumber = `ORD${Date.now()}`;
+        
         // Create order using the Order model
         const order = new Order({
+            orderNumber,
             customerId: orderData.customerId ? new (require('mongodb').ObjectId)(orderData.customerId) : null,
             customerInfo: orderData.customerInfo,
             items: orderData.items,
@@ -58,14 +71,127 @@ router.post('/', async (req, res) => {
             estimatedPrepTime: orderData.estimatedPrepTime || 15,
             promoCode: orderData.promoCode || null,
             loyaltyPointsUsed: orderData.loyaltyPointsUsed || 0,
-            loyaltyPointsEarned: Math.floor(orderData.total)
+            loyaltyPointsEarned: Math.floor(orderData.total),
+            status: 'pending',
+            createdAt: new Date(),
+            updatedAt: new Date()
         });
         
         const result = await order.save();
-        res.status(201).json({ ...order, _id: result.insertedId });
+        
+        // Return the created order with generated ID
+        const createdOrder = {
+            ...order,
+            _id: result.insertedId
+        };
+        
+        res.status(201).json(createdOrder);
     } catch (error) {
         console.error('Error creating order:', error);
         res.status(500).json({ message: 'Error creating order' });
+    }
+});
+
+// PUT /api/orders/:id/status - Update order status
+router.put('/:id/status', async (req, res) => {
+    try {
+        const { status } = req.body;
+        const db = getDB();
+        const { ObjectId } = require('mongodb');
+        
+        const validStatuses = ['pending', 'preparing', 'ready', 'completed', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Invalid order status' });
+        }
+        
+        const result = await db.collection('orders').updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { 
+                $set: { 
+                    status: status,
+                    updatedAt: new Date(),
+                    ...(status === 'completed' && { completedAt: new Date() })
+                } 
+            }
+        );
+        
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        
+        res.json({ message: 'Order status updated successfully' });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ message: 'Error updating order status' });
+    }
+});
+
+// POST /api/orders/:id/notify - Send customer notification
+router.post('/:id/notify', async (req, res) => {
+    try {
+        const { status } = req.body;
+        const db = getDB();
+        const { ObjectId } = require('mongodb');
+        
+        // Get order details
+        const order = await db.collection('orders').findOne({ _id: new ObjectId(req.params.id) });
+        
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        
+        // Send notification based on status
+        let notificationMessage = '';
+        switch (status) {
+            case 'accepted':
+                notificationMessage = `Your order #${order.orderNumber} has been accepted and is being prepared.`;
+                break;
+            case 'ready':
+                notificationMessage = `Your order #${order.orderNumber} is ready for ${order.orderType === 'pickup' ? 'pickup' : 'delivery'}.`;
+                break;
+            case 'completed':
+                notificationMessage = `Your order #${order.orderNumber} has been completed. Thank you!`;
+                break;
+            default:
+                notificationMessage = `Your order #${order.orderNumber} status has been updated.`;
+        }
+        
+        // In a real app, you would send email/SMS here
+        // For now, we'll just log the notification
+        console.log(`Notification sent to ${order.customerInfo.email}: ${notificationMessage}`);
+        
+        // Store notification in database for customer to view
+        await db.collection('notifications').insertOne({
+            orderId: order._id,
+            customerId: order.customerId,
+            customerEmail: order.customerInfo.email,
+            message: notificationMessage,
+            type: 'order_update',
+            status: status,
+            createdAt: new Date(),
+            read: false
+        });
+        
+        res.json({ message: 'Customer notification sent successfully' });
+    } catch (error) {
+        console.error('Error sending customer notification:', error);
+        res.status(500).json({ message: 'Error sending customer notification' });
+    }
+});
+
+// POST /api/staff/notifications - Handle staff notifications
+router.post('/staff/notifications', async (req, res) => {
+    try {
+        const { type, orderId, customerName, orderType, items, total, timestamp } = req.body;
+        
+        // In a real app, you might store these in a database or send via WebSocket
+        // For now, we'll just acknowledge receipt
+        console.log(`Staff notification received: ${type} - Order ${orderId} from ${customerName}`);
+        
+        res.json({ message: 'Staff notification received successfully' });
+    } catch (error) {
+        console.error('Error handling staff notification:', error);
+        res.status(500).json({ message: 'Error handling staff notification' });
     }
 });
 
@@ -98,15 +224,6 @@ router.post('/check-inventory', async (req, res) => {
                     };
                 }
                 
-                // Check if we have enough quantity (if quantity tracking is implemented)
-                if (product.quantity && product.quantity < item.quantity) {
-                    return { 
-                        id: item.id, 
-                        available: false, 
-                        message: `Only ${product.quantity} of ${product.name} available` 
-                    };
-                }
-                
                 return { 
                     id: item.id, 
                     available: true, 
@@ -120,7 +237,7 @@ router.post('/check-inventory', async (req, res) => {
         if (unavailableItems.length > 0) {
             return res.json({
                 success: false,
-                message: unavailableItems[0].message,
+                message: `Some items are not available: ${unavailableItems.map(item => item.message).join(', ')}`,
                 unavailableItems
             });
         }
@@ -128,76 +245,26 @@ router.post('/check-inventory', async (req, res) => {
         res.json({ success: true, message: 'All items are available' });
     } catch (error) {
         console.error('Error checking inventory:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Error checking inventory' 
-        });
+        res.status(500).json({ success: false, message: 'Error checking inventory' });
     }
 });
 
-// POST /api/orders/send-confirmation - Send order confirmation email
-router.post('/send-confirmation', async (req, res) => {
+// GET /api/orders/customer/:customerId - Get customer's orders
+router.get('/customer/:customerId', async (req, res) => {
     try {
-        const { orderId, email } = req.body;
+        const db = getDB();
+        const { ObjectId } = require('mongodb');
+        const customerId = new ObjectId(req.params.customerId);
         
-        // In a real application, you would integrate with an email service
-        // like SendGrid, AWS SES, or similar
-        console.log(`Sending confirmation email to ${email} for order ${orderId}`);
+        const orders = await db.collection('orders')
+            .find({ customerId })
+            .sort({ createdAt: -1 })
+            .toArray();
         
-        // Simulate email sending
-        const emailSent = await simulateEmailSending(email, orderId);
-        
-        if (emailSent) {
-            res.json({ success: true, message: 'Confirmation email sent' });
-        } else {
-            res.status(500).json({ success: false, message: 'Failed to send confirmation email' });
-        }
+        res.json(orders);
     } catch (error) {
-        console.error('Error sending confirmation email:', error);
-        res.status(500).json({ success: false, message: 'Error sending confirmation email' });
-    }
-});
-
-// Simulate email sending (replace with actual email service)
-async function simulateEmailSending(email, orderId) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log(`Email sent to ${email} for order ${orderId}`);
-            resolve(true);
-        }, 1000);
-    });
-}
-
-// PUT /api/orders/:id/status - Update order status
-router.put('/:id/status', async (req, res) => {
-    try {
-        const { status } = req.body;
-        const result = await Order.updateStatus(req.params.id, status);
-        
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-        
-        res.json({ message: 'Order status updated successfully' });
-    } catch (error) {
-        console.error('Error updating order status:', error);
-        res.status(500).json({ message: 'Error updating order status' });
-    }
-});
-
-// DELETE /api/orders/:id - Cancel order
-router.delete('/:id', async (req, res) => {
-    try {
-        const result = await Order.updateStatus(req.params.id, 'cancelled');
-        
-        if (result.matchedCount === 0) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-        
-        res.json({ message: 'Order cancelled successfully' });
-    } catch (error) {
-        console.error('Error cancelling order:', error);
-        res.status(500).json({ message: 'Error cancelling order' });
+        console.error('Error fetching customer orders:', error);
+        res.status(500).json({ message: 'Error fetching customer orders' });
     }
 });
 

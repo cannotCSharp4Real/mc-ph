@@ -3,13 +3,23 @@ class StaffDashboard {
     constructor() {
         this.currentUser = null;
         this.currentTime = new Date();
+        this.orders = {
+            incoming: [],
+            progress: [],
+            completed: []
+        };
+        this.notifications = [];
+        this.notificationSound = null;
         this.init();
     }
 
     async init() {
         this.setupEventListeners();
         this.updateTime();
-        this.loadSampleOrders();
+        this.loadOrders();
+        this.loadNotifications();
+        this.setupNotificationSound();
+        this.startPolling();
         setInterval(() => this.updateTime(), 1000);
     }
 
@@ -33,6 +43,304 @@ class StaffDashboard {
                 this.markOrderReady(e.target);
             }
         });
+
+        // Listen for new order events
+        window.addEventListener('newOrder', (e) => {
+            this.handleNewOrderNotification(e.detail);
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this.loadOrders();
+            }
+        });
+    }
+
+    setupNotificationSound() {
+        try {
+            this.notificationSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmETBjiR1/LNeSsFJHfH8N2QQAoUXrTp66hVFApGn+DyvmET');
+        } catch (error) {
+            console.error('Could not create notification sound:', error);
+        }
+    }
+
+    startPolling() {
+        // Poll for new orders every 5 seconds
+        setInterval(() => {
+            this.loadOrders();
+        }, 5000);
+    }
+
+    async loadOrders() {
+        try {
+            const response = await fetch('/api/orders?status=all');
+            if (response.ok) {
+                const orders = await response.json();
+                this.processOrders(orders);
+            }
+        } catch (error) {
+            console.error('Error loading orders:', error);
+            // Load sample orders if API fails
+            this.loadSampleOrders();
+        }
+    }
+
+    processOrders(orders) {
+        // Group orders by status
+        this.orders = {
+            incoming: orders.filter(order => order.status === 'pending'),
+            progress: orders.filter(order => order.status === 'preparing'),
+            completed: orders.filter(order => order.status === 'completed')
+        };
+
+        // Update displays
+        this.displayOrders('incomingOrders', this.orders.incoming, 'incoming');
+        this.displayOrders('progressOrders', this.orders.progress, 'progress');
+        this.displayOrders('completedOrders', this.orders.completed, 'completed');
+        
+        // Update notification badge
+        this.updateNotificationBadge();
+    }
+
+    loadSampleOrders() {
+        // Load sample orders for demonstration
+        const sampleOrders = [
+            {
+                _id: 'ORD001',
+                orderNumber: 'ORD001',
+                customerInfo: { name: 'John Doe' },
+                items: [
+                    { name: 'Cappuccino', quantity: 2, size: 'Large' },
+                    { name: 'Croissant', quantity: 1 }
+                ],
+                total: 245,
+                orderType: 'pickup',
+                status: 'pending',
+                createdAt: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+                estimatedPrepTime: 15
+            },
+            {
+                _id: 'ORD002',
+                orderNumber: 'ORD002',
+                customerInfo: { name: 'Jane Smith' },
+                items: [
+                    { name: 'Americano', quantity: 1, size: 'Medium' },
+                    { name: 'Blueberry Muffin', quantity: 1 }
+                ],
+                total: 185,
+                orderType: 'delivery',
+                status: 'preparing',
+                createdAt: new Date(Date.now() - 600000).toISOString(), // 10 minutes ago
+                estimatedPrepTime: 20
+            },
+            {
+                _id: 'ORD003',
+                orderNumber: 'ORD003',
+                customerInfo: { name: 'Bob Johnson' },
+                items: [
+                    { name: 'Latte', quantity: 1, size: 'Large' },
+                    { name: 'Grilled Sandwich', quantity: 1 }
+                ],
+                total: 320,
+                orderType: 'pickup',
+                status: 'completed',
+                createdAt: new Date(Date.now() - 900000).toISOString(), // 15 minutes ago
+                estimatedPrepTime: 25
+            }
+        ];
+
+        this.processOrders(sampleOrders);
+    }
+
+    displayOrders(containerId, orders, type) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (orders.length === 0) {
+            container.innerHTML = '<div class="empty-state">No orders</div>';
+            return;
+        }
+
+        container.innerHTML = orders.map(order => `
+            <div class="order-card ${type === 'completed' ? 'completed' : ''}" data-order-id="${order._id}">
+                <div class="order-header">
+                    <span class="order-number">#${order.orderNumber || order._id}</span>
+                    <span class="order-type ${order.orderType}">${order.orderType}</span>
+                </div>
+                <div class="order-info">
+                    <p><strong>Customer:</strong> ${order.customerInfo.name}</p>
+                    <p><strong>Time:</strong> ${this.formatTime(order.createdAt)}</p>
+                    <p><strong>Items:</strong> ${this.formatItems(order.items)}</p>
+                    <p><strong>Total:</strong> ₱${order.total.toFixed(2)}</p>
+                </div>
+                ${type === 'incoming' ? '<button class="order-action-btn accept-btn">Accept</button>' : ''}
+                ${type === 'progress' ? '<button class="order-action-btn ready-btn">Ready</button>' : ''}
+                ${type === 'completed' ? `<div class="completion-time">Completed: ${this.formatTime(order.completedAt || order.createdAt)}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    formatTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
+    formatItems(items) {
+        if (!items || items.length === 0) return 'No items';
+        
+        return items.map(item => {
+            let itemStr = `${item.name}`;
+            if (item.size) itemStr += ` (${item.size})`;
+            if (item.quantity > 1) itemStr += ` x${item.quantity}`;
+            return itemStr;
+        }).join(', ');
+    }
+
+    async acceptOrder(button) {
+        const orderCard = button.closest('.order-card');
+        const orderId = orderCard.dataset.orderId;
+        
+        try {
+            // Update order status in database
+            const response = await fetch(`/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: 'preparing' })
+            });
+            
+            if (response.ok) {
+                // Move order from incoming to progress
+                const order = this.orders.incoming.find(o => o._id === orderId);
+                if (order) {
+                    order.status = 'preparing';
+                    this.orders.incoming = this.orders.incoming.filter(o => o._id !== orderId);
+                    this.orders.progress.push(order);
+                    
+                    // Update displays
+                    this.displayOrders('incomingOrders', this.orders.incoming, 'incoming');
+                    this.displayOrders('progressOrders', this.orders.progress, 'progress');
+                    
+                    // Notify customer
+                    await this.notifyCustomer(orderId, 'accepted');
+                    
+                    this.showNotification('Order accepted and moved to preparation', 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error accepting order:', error);
+            this.showNotification('Error accepting order. Please try again.', 'error');
+        }
+    }
+
+    async markOrderReady(button) {
+        const orderCard = button.closest('.order-card');
+        const orderId = orderCard.dataset.orderId;
+        
+        try {
+            // Update order status in database
+            const response = await fetch(`/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: 'completed' })
+            });
+            
+            if (response.ok) {
+                // Move order from progress to completed
+                const order = this.orders.progress.find(o => o._id === orderId);
+                if (order) {
+                    order.status = 'completed';
+                    order.completedAt = new Date().toISOString();
+                    this.orders.progress = this.orders.progress.filter(o => o._id !== orderId);
+                    this.orders.completed.push(order);
+                    
+                    // Update displays
+                    this.displayOrders('progressOrders', this.orders.progress, 'progress');
+                    this.displayOrders('completedOrders', this.orders.completed, 'completed');
+                    
+                    // Notify customer
+                    await this.notifyCustomer(orderId, 'ready');
+                    
+                    this.showNotification('Order marked as ready and completed', 'success');
+                }
+            }
+        } catch (error) {
+            console.error('Error marking order ready:', error);
+            this.showNotification('Error updating order. Please try again.', 'error');
+        }
+    }
+
+    async notifyCustomer(orderId, status) {
+        try {
+            await fetch(`/api/orders/${orderId}/notify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status })
+            });
+        } catch (error) {
+            console.error('Error notifying customer:', error);
+        }
+    }
+
+    handleNewOrderNotification(orderData) {
+        // Play notification sound
+        this.playNotificationSound();
+        
+        // Add new order to incoming list
+        const newOrder = {
+            _id: orderData.orderId,
+            orderNumber: orderData.orderId,
+            customerInfo: { name: orderData.customerName },
+            items: orderData.items,
+            total: orderData.total,
+            orderType: orderData.orderType,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            estimatedPrepTime: 15
+        };
+        
+        this.orders.incoming.unshift(newOrder);
+        this.displayOrders('incomingOrders', this.orders.incoming, 'incoming');
+        
+        // Update notification badge
+        this.updateNotificationBadge();
+        
+        // Show notification
+        this.showNotification(`New ${orderData.orderType} order from ${orderData.customerName}`, 'info');
+    }
+
+    playNotificationSound() {
+        if (this.notificationSound) {
+            this.notificationSound.currentTime = 0;
+            this.notificationSound.play().catch(e => console.error('Error playing sound:', e));
+        }
+    }
+
+    updateNotificationBadge() {
+        const notificationDot = document.querySelector('.notification-dot');
+        if (notificationDot) {
+            notificationDot.style.display = this.orders.incoming.length > 0 ? 'block' : 'none';
+        }
+    }
+
+    loadNotifications() {
+        const stored = localStorage.getItem('staff_notifications');
+        if (stored) {
+            this.notifications = JSON.parse(stored);
+        }
     }
 
     switchSection(sectionName) {
@@ -76,114 +384,6 @@ class StaffDashboard {
         }
     }
 
-    loadSampleOrders() {
-        // Load sample orders for demonstration
-        const incomingOrders = [
-            {
-                id: 'ORD001',
-                dateTime: '07/13/2025 - 7:15 AM',
-                items: 'Cappuccino x2, Croissant x1'
-            },
-            {
-                id: 'ORD002',
-                dateTime: '07/13/2025 - 7:18 AM',
-                items: 'Americano x1, Muffin x1'
-            }
-        ];
-
-        const progressOrders = [
-            {
-                id: 'ORD003',
-                dateTime: '07/13/2025 - 7:12 AM',
-                items: 'Latte x1, Sandwich x1'
-            }
-        ];
-
-        const completedOrders = [
-            {
-                id: 'ORD004',
-                dateTime: '07/13/2025 - 7:05 AM',
-                items: 'Espresso x2, Bagel x1'
-            }
-        ];
-
-        this.displayOrders('incomingOrders', incomingOrders, 'incoming');
-        this.displayOrders('progressOrders', progressOrders, 'progress');
-        this.displayOrders('completedOrders', completedOrders, 'completed');
-    }
-
-    displayOrders(containerId, orders, type) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        container.innerHTML = orders.map(order => `
-            <div class="order-card ${type === 'completed' ? 'completed' : ''}" data-order-id="${order.id}">
-                <div class="order-info">
-                    <p><strong>Order ID:</strong> ${order.id}</p>
-                    <p><strong>Date & Time:</strong> ${order.dateTime}</p>
-                    <p><strong>Items:</strong> ${order.items}</p>
-                </div>
-                ${type === 'incoming' ? '<button class="order-action-btn accept-btn">Accept</button>' : ''}
-                ${type === 'progress' ? '<button class="order-action-btn ready-btn">Ready</button>' : ''}
-            </div>
-        `).join('');
-    }
-
-    acceptOrder(button) {
-        const orderCard = button.closest('.order-card');
-        const orderId = orderCard.dataset.orderId;
-        
-        // Move order from incoming to progress
-        const orderInfo = orderCard.querySelector('.order-info').innerHTML;
-        
-        // Remove from incoming
-        orderCard.remove();
-        
-        // Add to progress
-        const progressContainer = document.getElementById('progressOrders');
-        const newOrderCard = document.createElement('div');
-        newOrderCard.className = 'order-card';
-        newOrderCard.dataset.orderId = orderId;
-        newOrderCard.innerHTML = `
-            <div class="order-info">
-                ${orderInfo}
-            </div>
-            <button class="order-action-btn ready-btn">Ready</button>
-        `;
-        
-        progressContainer.appendChild(newOrderCard);
-        
-        // Show notification
-        this.showNotification('Order accepted and moved to preparation', 'success');
-    }
-
-    markOrderReady(button) {
-        const orderCard = button.closest('.order-card');
-        const orderId = orderCard.dataset.orderId;
-        
-        // Move order from progress to completed
-        const orderInfo = orderCard.querySelector('.order-info').innerHTML;
-        
-        // Remove from progress
-        orderCard.remove();
-        
-        // Add to completed
-        const completedContainer = document.getElementById('completedOrders');
-        const newOrderCard = document.createElement('div');
-        newOrderCard.className = 'order-card completed';
-        newOrderCard.dataset.orderId = orderId;
-        newOrderCard.innerHTML = `
-            <div class="order-info">
-                ${orderInfo}
-            </div>
-        `;
-        
-        completedContainer.appendChild(newOrderCard);
-        
-        // Show notification
-        this.showNotification('Order marked as ready and completed', 'success');
-    }
-
     showNotification(message, type = 'info') {
         // Create notification element
         const notification = document.createElement('div');
@@ -193,7 +393,7 @@ class StaffDashboard {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'success' ? '#28a745' : '#007bff'};
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
             color: white;
             padding: 1rem 1.5rem;
             border-radius: 6px;
@@ -217,13 +417,7 @@ class StaffDashboard {
 
     async loadInventory() {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/products', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
+            const response = await fetch('/api/products');
             if (response.ok) {
                 const products = await response.json();
                 this.displayInventory(products);
@@ -244,13 +438,22 @@ class StaffDashboard {
 
         container.innerHTML = products.map(product => `
             <div class="inventory-item">
-                <h3>${product.name}</h3>
-                <p>Stock: ${product.stock}</p>
-                <p>Price: ₱${product.price}</p>
-                <div class="item-actions">
-                    <button class="action-btn" onclick="updateStock('${product._id}')">
-                        Update Stock
-                    </button>
+                <div class="inventory-card">
+                    <div class="inventory-header">
+                        <h3>${product.name}</h3>
+                        <span class="inventory-category">${product.category}</span>
+                    </div>
+                    <div class="inventory-details">
+                        <p><strong>Price:</strong> ₱${product.price.toFixed(2)}</p>
+                        <p><strong>Stock:</strong> ${product.stock || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${product.inStock ? 'In Stock' : 'Out of Stock'}</p>
+                    </div>
+                    <div class="inventory-actions">
+                        <button class="action-btn" onclick="updateStock('${product._id}')">
+                            <i class="fas fa-edit"></i>
+                            Update Stock
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -259,6 +462,7 @@ class StaffDashboard {
     logout() {
         if (confirm('Are you sure you want to logout?')) {
             localStorage.removeItem('token');
+            localStorage.removeItem('staff_notifications');
             window.location.href = '/auth.html';
         }
     }

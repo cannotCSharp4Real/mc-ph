@@ -605,6 +605,9 @@ class CartPage {
             
             const order = await response.json();
             
+            // Notify staff about new order
+            await this.notifyStaff(order);
+            
             // Clear cart and show success
             this.cart = [];
             this.saveCart();
@@ -616,6 +619,91 @@ class CartPage {
         } finally {
             this.isProcessing = false;
             this.hideLoadingState();
+        }
+    }
+
+    async notifyStaff(order) {
+        try {
+            // Play notification sound
+            this.playNotificationSound();
+            
+            // Send notification to staff dashboard if running
+            if (window.location.origin) {
+                await fetch('/api/staff/notifications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'new_order',
+                        orderId: order._id,
+                        customerName: order.customerInfo.name,
+                        orderType: order.orderType,
+                        items: order.items,
+                        total: order.total,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+            }
+            
+            // Store notification in localStorage for staff dashboard
+            const notifications = JSON.parse(localStorage.getItem('staff_notifications') || '[]');
+            notifications.push({
+                id: Date.now(),
+                type: 'new_order',
+                orderId: order._id,
+                customerName: order.customerInfo.name,
+                orderType: order.orderType,
+                items: order.items,
+                total: order.total,
+                timestamp: new Date().toISOString(),
+                read: false
+            });
+            
+            // Keep only last 50 notifications
+            if (notifications.length > 50) {
+                notifications.splice(0, notifications.length - 50);
+            }
+            
+            localStorage.setItem('staff_notifications', JSON.stringify(notifications));
+            
+            // Dispatch custom event for staff dashboard
+            window.dispatchEvent(new CustomEvent('newOrder', {
+                detail: {
+                    orderId: order._id,
+                    customerName: order.customerInfo.name,
+                    orderType: order.orderType,
+                    items: order.items,
+                    total: order.total
+                }
+            }));
+            
+        } catch (error) {
+            console.error('Error notifying staff:', error);
+            // Don't fail the order if notification fails
+        }
+    }
+
+    playNotificationSound() {
+        try {
+            // Create audio context for notification sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (error) {
+            console.error('Error playing notification sound:', error);
         }
     }
 
