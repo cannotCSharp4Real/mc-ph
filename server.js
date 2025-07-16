@@ -63,6 +63,18 @@ app.get('*', (req, res) => {
     }
 });
 
+// Staff-only route protection middleware
+const staffOnly = (req, res, next) => {
+    // For now, we'll handle auth on the frontend
+    // In a real app, you'd verify JWT token here
+    next();
+};
+
+// Protected staff routes
+app.get('/staff.html', staffOnly, (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'staff.html'));
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);

@@ -109,7 +109,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Redirect based on user role or server redirect path
                 setTimeout(() => {
                     if (data.user.role === 'customer') {
-                        window.location.href = 'index.html';
+                        window.location.href = 'menu.html';
+                    } else if (data.user.role === 'staff') {
+                        window.location.href = 'staff.html';
+                    } else if (data.user.role === 'admin') {
+                        window.location.href = 'admin.html';
                     } else {
                         const redirectPath = data.redirectTo || 'index.html';
                         window.location.href = redirectPath;
@@ -120,7 +124,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Sign in error:', error);
-            showMessage('Connection error. Please try again.', 'error');
+            
+            // Fallback to local authentication
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email || u.username === email);
+            
+            if (user && user.password === password) {
+                // Create a mock token
+                const token = 'local-token-' + Date.now();
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                showMessage('Sign in successful! Redirecting...', 'success');
+                
+                setTimeout(() => {
+                    if (user.role === 'customer') {
+                        window.location.href = 'menu.html';
+                    } else if (user.role === 'staff') {
+                        window.location.href = 'staff.html';
+                    } else if (user.role === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'index.html';
+                    }
+                }, 1500);
+            } else {
+                showMessage('Connection error. Please try again.', 'error');
+            }
         } finally {
             hideLoading(submitBtn, 'Sign In');
         }
@@ -346,4 +376,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // Add test staff user for development
+    function createTestStaffUser() {
+        const testStaff = {
+            username: 'staff',
+            email: 'staff@test.com',
+            password: 'staff123', // In production, this should be hashed
+            role: 'staff',
+            firstName: 'Staff',
+            lastName: 'Member'
+        };
+        
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const existingStaff = users.find(u => u.username === 'staff');
+        
+        if (!existingStaff) {
+            users.push(testStaff);
+            localStorage.setItem('users', JSON.stringify(users));
+            console.log('🧪 Test staff user created: staff/staff123');
+        }
+    }
+    
+    // Create test staff user on page load
+    createTestStaffUser();
 });

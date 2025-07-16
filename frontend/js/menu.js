@@ -175,6 +175,15 @@ function setupEventListeners() {
         });
     }
     
+    // Orders link functionality
+    const myOrdersLink = document.getElementById('myOrders');
+    if (myOrdersLink) {
+        myOrdersLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showOrderHistory();
+        });
+    }
+    
     // Close dropdown when clicking outside
     document.addEventListener('click', function() {
         if (dropdownMenu) {
@@ -302,14 +311,9 @@ async function loadAddons() {
         }
         
         const products = await response.json();
-        // Filter products that have add-ons
+        // Filter products that are add-ons
         availableAddons = products.filter(product => 
-            product.addOns && product.addOns.length > 0
-        ).flatMap(product => product.addOns);
-        
-        // Remove duplicates
-        availableAddons = availableAddons.filter((addon, index, self) =>
-            index === self.findIndex(a => a.name === addon.name)
+            product.category === 'add-ons' && product.inStock
         );
         
         console.log('Available add-ons:', availableAddons);
@@ -461,21 +465,34 @@ function openDrinkCustomization() {
     // Reset size selection
     const sizeSelect = document.getElementById('sizeSelect');
     if (sizeSelect) {
-        sizeSelect.value = 'small';
-        // Update options with actual prices
-        const basePrice = selectedProduct.price;
-        sizeSelect.innerHTML = `
-            <option value="small" data-price="0">Small ${basePrice}</option>
-            <option value="medium" data-price="20">Medium ${basePrice + 20}</option>
-            <option value="large" data-price="40">Large ${basePrice + 40}</option>
-        `;
+        // Use real sizes data from the product
+        if (selectedProduct.sizes && selectedProduct.sizes.length > 0) {
+            sizeSelect.innerHTML = selectedProduct.sizes.map((size, index) => 
+                `<option value="${size.name.toLowerCase()}" data-price="${size.price}" ${index === 0 ? 'selected' : ''}>
+                    ${size.name} ₱${size.price}
+                </option>`
+            ).join('');
+        } else {
+            // Fallback for products without sizes
+            const basePrice = selectedProduct.price || 0;
+            sizeSelect.innerHTML = `
+                <option value="regular" data-price="${basePrice}">Regular ₱${basePrice}</option>
+            `;
+        }
     }
     
-    // Reset add-ons checkboxes
-    const addonsCheckboxes = document.querySelectorAll('#addonsOptions input[type="checkbox"]');
-    addonsCheckboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
+    // Populate add-ons dynamically
+    const addonsContainer = document.getElementById('addonsOptions');
+    if (addonsContainer && availableAddons.length > 0) {
+        addonsContainer.innerHTML = availableAddons.map(addon => `
+            <div class="addon-item">
+                <label>
+                    <input type="checkbox" name="addon" value="${addon.name}" data-price="${addon.price}">
+                    <span>${addon.name} ₱${addon.price}</span>
+                </label>
+            </div>
+        `).join('');
+    }
     
     // Add event listeners for price updates
     if (sizeSelect) {
@@ -555,34 +572,34 @@ function openFoodCustomization() {
 
 // Update drink price
 function updateDrinkPrice() {
-    let totalPrice = selectedProduct.price;
+    let totalPrice = 0;
     
-    // Add size upcharge
+    // Get size price (this is now the actual price, not an upcharge)
     const sizeSelect = document.getElementById('sizeSelect');
     if (sizeSelect) {
         const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
-        totalPrice += parseFloat(selectedOption.dataset.price);
+        totalPrice = parseFloat(selectedOption.dataset.price || 0);
     }
     
     // Add add-on prices
     const selectedAddons = document.querySelectorAll('#addonsOptions input[type="checkbox"]:checked');
     selectedAddons.forEach(addon => {
-        totalPrice += parseFloat(addon.dataset.price);
+        totalPrice += parseFloat(addon.dataset.price || 0);
     });
     
     // Multiply by quantity
-    const quantity = parseInt(document.getElementById('drinkQuantity').textContent);
+    const quantity = parseInt(document.getElementById('drinkQuantity').textContent) || 1;
     totalPrice *= quantity;
     
-    document.getElementById('drinkTotalPrice').textContent = totalPrice;
+    document.getElementById('drinkTotalPrice').textContent = `₱${totalPrice}`;
 }
 
 // Update food price
 function updateFoodPrice() {
-    const quantity = parseInt(document.getElementById('foodQuantity').textContent);
-    const totalPrice = selectedProduct.price * quantity;
+    const quantity = parseInt(document.getElementById('foodQuantity').textContent) || 1;
+    const totalPrice = (selectedProduct.price || 0) * quantity;
     
-    document.getElementById('foodTotalPrice').textContent = totalPrice;
+    document.getElementById('foodTotalPrice').textContent = `₱${totalPrice}`;
 }
 
 // Update quantity
@@ -628,13 +645,13 @@ function addDrinkToCartHandler() {
         id: selectedProduct._id,
         name: selectedProduct.name,
         category: selectedProduct.category,
-        basePrice: selectedProduct.price,
+        basePrice: selectedSize.price, // Use the actual size price as base
         quantity: quantity,
         size: selectedSize.name,
         sizePrice: selectedSize.price,
         addons: selectedAddons.map(addon => addon.name),
         addonsPrice: selectedAddons.reduce((total, addon) => total + addon.price, 0),
-        totalPrice: parseFloat(document.getElementById('drinkTotalPrice').textContent)
+        totalPrice: parseFloat(document.getElementById('drinkTotalPrice').textContent.replace('₱', ''))
     };
     
     addToCart(cartItem);
@@ -651,7 +668,7 @@ function addFoodToCartHandler() {
         category: selectedProduct.category,
         basePrice: selectedProduct.price,
         quantity: quantity,
-        totalPrice: parseFloat(document.getElementById('foodTotalPrice').textContent)
+        totalPrice: parseFloat(document.getElementById('foodTotalPrice').textContent.replace('₱', ''))
     };
     
     addToCart(cartItem);
@@ -858,6 +875,68 @@ function clearSearch() {
     // Reset to all products
     setActiveNavButton('all');
     filterByCategory('all');
+}
+
+// Show order history
+function showOrderHistory() {
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    
+    // Create modal HTML if it doesn't exist
+    let modal = document.getElementById('orderHistoryModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'orderHistoryModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Order History</h3>
+                    <button class="modal-close" id="closeOrderHistoryModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="order-history-list" id="orderHistoryList">
+                        <!-- Order history will be populated here -->
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Add close event listener
+        document.getElementById('closeOrderHistoryModal').addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+    
+    const orderHistoryList = document.getElementById('orderHistoryList');
+    
+    if (orders.length === 0) {
+        orderHistoryList.innerHTML = `
+            <div class="empty-cart">
+                <i class="fas fa-history"></i>
+                <h3>No orders yet</h3>
+                <p>Your order history will appear here.</p>
+            </div>
+        `;
+    } else {
+        orderHistoryList.innerHTML = orders.map(order => `
+            <div class="order-history-item">
+                <div class="order-header">
+                    <div class="order-id">${order.id}</div>
+                    <div class="order-date">${new Date(order.timestamp).toLocaleDateString()}</div>
+                    <div class="order-status ${order.status}">${order.status}</div>
+                </div>
+                <div class="order-items">
+                    ${order.items.map(item => `${item.name} (${item.quantity}x)`).join(', ')}
+                </div>
+                <div class="order-total">Total: ₱${order.total.toFixed(2)}</div>
+            </div>
+        `).join('');
+    }
+    
+    modal.style.display = 'block';
 }
 
 // Test JavaScript loading

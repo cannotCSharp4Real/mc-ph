@@ -3,51 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Dashboard - MC-PH Coffee Shop</title>
+    <title>Staff Dashboard - Coffee Shop</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="css/staff.css">
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="container">
         <!-- Header -->
-        <header class="top-header">
-            <div class="header-left">
+        <header class="header">
+            <div class="header-content">
                 <div class="logo">
-                    <i class="fas fa-coffee"></i>
-                    <span>MC-PH Staff Portal</span>
+                    <h1>Staff Dashboard</h1>
                 </div>
-            </div>
-            <div class="header-center">
-                <div class="shift-info">
-                    <div class="shift-status">
-                        <i class="fas fa-clock"></i>
-                        <span>Shift: 08:00 - 16:00</span>
-                        <span class="status-indicator active">Active</span>
+                <div class="header-actions">
+                    <div class="profile-dropdown">
+                        <i class="fas fa-user-circle"></i>
+                        <div class="dropdown-content">
+                            <a href="#" id="logoutLink">Logout</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="header-right">
-                <div class="header-actions">
-                    <button class="action-btn" title="Notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">2</span>
-                    </button>
-                    <div class="user-menu">
-                        <button class="user-btn" onclick="toggleUserMenu()">
-                            <div class="user-avatar">
-                                <i class="fas fa-user-tie"></i>
-                            </div>
-                            <span id="staffName">Staff Member</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="user-dropdown" id="userDropdown">
-                            <a href="#profile" class="dropdown-item">
-                                <i class="fas fa-user"></i>
-                                Profile
-                            </a>
-                            <a href="#schedule" class="dropdown-item">
-                                <i class="fas fa-calendar"></i>
-                                Schedule
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-content">
+                    <div class="nav-item active" id="ordersNav">
+                        <i class="fas fa-circle nav-indicator"></i>
+                        <span>Orders</span>
+                    </div>
+                </div>
+                <div class="sidebar-footer">
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </aside>
+
+            <!-- Orders Section -->
+            <section class="orders-section" id="ordersSection">
+                <div class="orders-container">
+                    <!-- Incoming Orders -->
+                    <div class="order-column">
+                        <h2>Incoming Orders</h2>
+                        <div class="order-cards" id="incomingOrders">
+                            <!-- Order cards will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- In Progress Orders -->
+                    <div class="order-column">
+                        <h2>In Progress</h2>
+                        <div class="order-cards" id="inProgressOrders">
+                            <!-- Order cards will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Completed Orders -->
+                    <div class="order-column">
+                        <h2>Completed</h2>
+                        <div class="order-cards" id="completedOrders">
+                            <!-- Order cards will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Date and Time -->
+        <div class="datetime-display">
+            <span id="currentDateTime"></span>
+        </div>
+    </div>
+
+    <script src="js/staff.js"></script>
+</body>
+</html>
                             </a>
                             <div class="dropdown-divider"></div>
                             <a href="#" class="dropdown-item" onclick="logout()">

@@ -20,7 +20,7 @@ body {
 
 /* Header Styles */
 .header {
-    background-color: #8B4513;
+    background-color: #d4a574;
     color: white;
     padding: 1rem 0;
 }
@@ -123,7 +123,7 @@ body {
 }
 
 .cart-item-price {
-    color: #8B4513;
+    color: #d4a574;
     font-weight: bold;
     font-size: 16px;
 }
@@ -141,7 +141,7 @@ body {
 }
 
 .quantity-btn {
-    background-color: #8B4513;
+    background-color: #d4a574;
     color: white;
     border: none;
     border-radius: 50%;
@@ -155,7 +155,7 @@ body {
 }
 
 .quantity-btn:hover {
-    background-color: #6B3410;
+    background-color: #d4a574;
 }
 
 .quantity-display {
@@ -214,7 +214,7 @@ body {
 .summary-row.total {
     font-weight: bold;
     font-size: 18px;
-    color: #8B4513;
+    color: #d4a574;
     border-top: 1px solid #ddd;
     padding-top: 0.5rem;
     margin-top: 1rem;
@@ -250,12 +250,12 @@ body {
 }
 
 .order-type-btn:hover {
-    border-color: #8B4513;
+    border-color: #d4a574;
 }
 
 .order-type-btn.active {
-    border-color: #8B4513;
-    background-color: #8B4513;
+    border-color: #d4a574;
+    background-color: #d4a574;
     color: white;
 }
 
@@ -296,14 +296,14 @@ body {
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #8B4513;
+    border-color: #d4a574;
 }
 
 /* Place Order Button */
 .place-order-btn {
     width: 100%;
     padding: 1rem;
-    background-color: #8B4513;
+    background-color: #d4a574;
     color: white;
     border: none;
     border-radius: 10px;
@@ -405,7 +405,7 @@ body {
 
 .order-id {
     font-weight: bold;
-    color: #8B4513;
+    color: #d4a574;
 }
 
 .order-date {
