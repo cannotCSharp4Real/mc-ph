@@ -193,7 +193,7 @@ function getRedirectPath(role) {
             return '/staff.html';
         case 'customer':
         default:
-            return '/customer.html';
+            return '/index.html';
     }
 }
 

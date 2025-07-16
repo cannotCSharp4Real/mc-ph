@@ -108,8 +108,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Redirect based on user role or server redirect path
                 setTimeout(() => {
-                    const redirectPath = data.redirectTo || 'index.html';
-                    window.location.href = redirectPath;
+                    if (data.user.role === 'customer') {
+                        window.location.href = 'index.html';
+                    } else {
+                        const redirectPath = data.redirectTo || 'index.html';
+                        window.location.href = redirectPath;
+                    }
                 }, 1500);
             } else {
                 showMessage(data.message || 'Sign in failed. Please try again.', 'error');

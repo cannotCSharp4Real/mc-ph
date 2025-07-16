@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Menu</title>
+</head>
+<body>
+    <h1>Test Menu Page</h1>
+    <div id="test">Loading...</div>
+    
+    <script>
+        console.log('Inline script working');
+        document.getElementById('test').textContent = 'JavaScript is working!';
+        
+        // Test fetch API
+        fetch('/api/products')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Products:', data);
+                document.getElementById('test').textContent = `Found ${data.length} products`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('test').textContent = 'Error loading products';
+            });
+    </script>
+</body>
+</html>

@@ -32,6 +32,7 @@ const requireAdmin = (req, res, next) => {
 // GET /api/products - Get all products
 router.get('/', async (req, res) => {
     try {
+        console.log('📡 GET /api/products - Fetching all products');
         const db = getDB();
         const { category } = req.query;
         
@@ -41,9 +42,10 @@ router.get('/', async (req, res) => {
         }
         
         const products = await db.collection('products').find(filter).toArray();
+        console.log(`✅ Found ${products.length} products`);
         res.json(products);
     } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('❌ Error fetching products:', error);
         res.status(500).json({ message: 'Error fetching products' });
     }
 });

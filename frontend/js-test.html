@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JavaScript Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffeeee; color: red; }
+        .success { background: #eeffee; color: green; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Debug Test</h1>
+    
+    <div id="status" class="debug">Testing...</div>
+    <div id="products" class="debug">Loading products...</div>
+    
+    <script>
+        console.log('🚀 Test script loaded');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM loaded');
+            document.getElementById('status').textContent = 'DOM loaded successfully';
+            document.getElementById('status').className = 'debug success';
+            
+            // Test API call
+            fetch('/api/products')
+                .then(response => {
+                    console.log('📡 API response:', response);
+                    return response.json();
+                })
+                .then(products => {
+                    console.log('✅ Products received:', products);
+                    
+                    const productsDiv = document.getElementById('products');
+                    productsDiv.innerHTML = `
+                        <h3>Products loaded successfully!</h3>
+                        <p>Found ${products.length} products:</p>
+                        <ul>
+                            ${products.map(p => `<li>${p.name} - ₱${p.price}</li>`).join('')}
+                        </ul>
+                    `;
+                    productsDiv.className = 'debug success';
+                })
+                .catch(error => {
+                    console.error('❌ Error:', error);
+                    
+                    const productsDiv = document.getElementById('products');
+                    productsDiv.innerHTML = `Error: ${error.message}`;
+                    productsDiv.className = 'debug error';
+                });
+        });
+    </script>
+</body>
+</html>
