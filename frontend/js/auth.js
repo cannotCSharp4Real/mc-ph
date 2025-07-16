@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Create a mock token
                 const token = 'local-token-' + Date.now();
                 localStorage.setItem('authToken', token);
-                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('userData', JSON.stringify(user));
                 
                 showMessage('Sign in successful! Redirecting...', 'success');
                 
@@ -398,6 +398,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Create test staff user on page load
+    // Add test admin user for development
+    function createTestAdminUser() {
+        const testAdmin = {
+            username: 'admin',
+            email: 'admin@test.com',
+            password: 'admin123', // In production, this should be hashed
+            role: 'admin',
+            firstName: 'Admin',
+            lastName: 'User'
+        };
+        
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        const existingAdmin = users.find(u => u.username === 'admin');
+        
+        if (!existingAdmin) {
+            users.push(testAdmin);
+            localStorage.setItem('users', JSON.stringify(users));
+            console.log('🧪 Test admin user created: admin/admin123');
+        }
+    }
+    
+    // Create test users on page load
     createTestStaffUser();
+    createTestAdminUser();
 });

@@ -97,26 +97,26 @@ body {
     width: 32px;
     height: 32px;
     cursor: pointer;
-    padding: 0.5rem;
     border-radius: 50%;
-    transition: background-color 0.3s ease;
+    transition: opacity 0.3s ease;
 }
 
 .profile-img:hover {
-    background-color: #e0e0e0;
+    opacity: 0.8;
 }
 
 .dropdown-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 5px);
     right: 0;
     background-color: white;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 140px;
     display: none;
     z-index: 1001;
+    overflow: hidden;
 }
 
 .dropdown-menu.show {
@@ -125,10 +125,16 @@ body {
 
 .dropdown-item {
     display: block;
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 1rem;
     text-decoration: none;
     color: #333;
-    transition: background-color 0.3s ease;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
 }
 
 .dropdown-item:hover {

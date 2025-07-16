@@ -284,11 +284,13 @@ async function loadProducts() {
             throw new Error('Products response is not an array');
         }
         
-        allProducts = products;
+        // Filter out add-ons from main product display
+        allProducts = products.filter(product => product.category !== 'add-ons');
         filteredProducts = [...allProducts];
         console.log('📊 Products arrays initialized:', {
             allProducts: allProducts.length,
-            filteredProducts: filteredProducts.length
+            filteredProducts: filteredProducts.length,
+            addonsFiltered: products.length - allProducts.length
         });
         
         renderProducts();
@@ -387,6 +389,14 @@ function renderProducts() {
                 return '';
             }
             
+            // Calculate display price
+            let displayPrice = product.price || 0;
+            
+            // For drinks with sizes, show the smallest size price
+            if (product.category === 'drinks' && product.sizes && product.sizes.length > 0) {
+                displayPrice = Math.min(...product.sizes.map(size => size.price));
+            }
+            
             return `
                 <div class="product-card">
                     <img src="${product.image || '/images/placeholder.jpg'}" alt="${product.name || 'Product'}" class="product-image">
@@ -394,7 +404,7 @@ function renderProducts() {
                         <div class="product-category">${product.category || 'Unknown'}</div>
                         <h3 class="product-name">${product.name || 'Unnamed Product'}</h3>
                         <p class="product-description">${product.description || 'No description available'}</p>
-                        <div class="product-price">₱${(product.price || 0).toFixed(2)}</div>
+                        <div class="product-price">₱${displayPrice.toFixed(2)}</div>
                         <button class="add-to-cart-btn" onclick="openCustomization('${product._id || ''}')">
                             Add to Cart
                         </button>
@@ -924,14 +934,36 @@ function showOrderHistory() {
         orderHistoryList.innerHTML = orders.map(order => `
             <div class="order-history-item">
                 <div class="order-header">
-                    <div class="order-id">${order.id}</div>
-                    <div class="order-date">${new Date(order.timestamp).toLocaleDateString()}</div>
+                    <div class="order-id-section">
+                        <div class="order-id">${order.id}</div>
+                        <div class="order-date">${new Date(order.timestamp).toLocaleDateString()}</div>
+                    </div>
                     <div class="order-status ${order.status}">${order.status}</div>
                 </div>
-                <div class="order-items">
-                    ${order.items.map(item => `${item.name} (${item.quantity}x)`).join(', ')}
+                <div class="order-details">
+                    <div class="order-items">
+                        <h4>Items:</h4>
+                        <ul class="items-list">
+                            ${order.items.map(item => `
+                                <li class="item-detail">
+                                    <span class="item-name">${item.name}</span>
+                                    <span class="item-quantity">×${item.quantity}</span>
+                                    <span class="item-price">₱${(item.price * item.quantity).toFixed(2)}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    <div class="order-summary">
+                        <div class="order-type">
+                            <i class="fas fa-${order.type === 'pickup' ? 'shopping-bag' : 'truck'}"></i>
+                            ${order.type === 'pickup' ? 'Pickup' : 'Delivery'}
+                        </div>
+                        <div class="order-total">
+                            <span>Total: </span>
+                            <span class="total-amount">₱${order.total.toFixed(2)}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="order-total">Total: ₱${order.total.toFixed(2)}</div>
             </div>
         `).join('');
     }

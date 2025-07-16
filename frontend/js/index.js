@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update cart count
     updateCartCount();
     
+    // Initialize notifications for customers
+    if (window.notificationManager) {
+        console.log('🔔 Customer notifications initialized');
+    }
+    
     // Event Listeners
     profileIcon.addEventListener('click', toggleDropdown);
     signBtn.addEventListener('click', handleSignIn);

@@ -184,12 +184,21 @@ function placeOrder() {
     // Save order to localStorage (in a real app, this would be sent to the server)
     const orders = JSON.parse(localStorage.getItem('orders')) || [];
     const orderId = 'ORD-' + Date.now();
-    orders.push({
+    const newOrder = {
         id: orderId,
         ...orderData,
         status: 'pending'
-    });
+    };
+    
+    orders.push(newOrder);
     localStorage.setItem('orders', JSON.stringify(orders));
+    
+    // Trigger notification for new order
+    if (window.notificationManager) {
+        notificationManager.sendNewOrderNotification(newOrder);
+    }
+    
+    console.log('✅ Order created:', newOrder);
 
     // Clear cart
     localStorage.removeItem('cart');

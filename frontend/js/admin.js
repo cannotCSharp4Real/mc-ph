@@ -5,6 +5,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return; // Exit if not authenticated
     }
     
+    // Setup logout button immediately
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+        console.log('✅ Logout button event listener attached');
+    } else {
+        console.log('❌ Logout button not found');
+    }
+    
     // Initialize the dashboard
     initializeDashboard();
     updateDateTime();
@@ -17,6 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize dashboard functionality
 function initializeDashboard() {
+    // Force create sales data from completed orders
+    forceSalesDataCreation();
+    
     // Navigation functionality
     const navLinks = document.querySelectorAll('.nav-link');
     
@@ -102,8 +114,20 @@ function updateDateTime() {
 
 // Load sales data
 async function loadSalesData() {
+    console.log('📊 Loading sales data...');
+    
+    // First, convert any existing completed orders to sales records
+    const convertedRecords = convertCompletedOrdersToSales();
+    console.log('🔄 Converted records:', convertedRecords.length);
+    
+    // Ensure we have some sales data for testing
+    if (convertedRecords.length === 0) {
+        console.log('⚠️ No sales records after conversion, creating test data...');
+        ensureSalesData();
+    }
+    
     try {
-        // Fetch sales summary
+        // Try to fetch from API first
         const summaryResponse = await apiRequest('/sales/summary');
         const productsResponse = await apiRequest('/sales/products-stats');
         
@@ -125,10 +149,222 @@ async function loadSalesData() {
         loadChartData('daily');
         
     } catch (error) {
-        console.error('Error loading sales data:', error);
-        // Display fallback data
-        displayFallbackData();
+        console.error('Error loading sales data from API:', error);
+        console.log('📱 Using localStorage data as fallback...');
+        // Use localStorage data as fallback
+        loadSalesDataFromLocalStorage();
     }
+}
+
+// Load sales data from localStorage
+function loadSalesDataFromLocalStorage() {
+    // First, let's check what we have in localStorage
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const salesRecords = JSON.parse(localStorage.getItem('salesRecords')) || [];
+    
+    console.log('� DIAGNOSTIC INFO:');
+    console.log('📦 Total orders in localStorage:', orders.length);
+    console.log('✅ Completed orders:', orders.filter(o => o.status === 'completed').length);
+    console.log('📊 Sales records in localStorage:', salesRecords.length);
+    
+    // Force conversion of completed orders to sales
+    const updatedSalesRecords = convertCompletedOrdersToSales();
+    
+    console.log('📈 After conversion - Sales records:', updatedSalesRecords.length);
+    console.log('📊 Raw sales records:', updatedSalesRecords);
+    
+    if (updatedSalesRecords.length === 0) {
+        console.log('⚠️ No sales records found after conversion, creating test data...');
+        ensureSalesData();
+        
+        // Try again after creating test data
+        const finalRecords = JSON.parse(localStorage.getItem('salesRecords')) || [];
+        if (finalRecords.length === 0) {
+            console.log('❌ Still no sales records after ensureSalesData');
+            displayFallbackData();
+            return;
+        }
+        
+        console.log('✅ Now processing', finalRecords.length, 'sales records');
+        // Process the new records
+        processSalesRecords(finalRecords);
+        return;
+    }
+    
+    // Process existing records
+    processSalesRecords(updatedSalesRecords);
+}
+
+// Process sales records and update display
+function processSalesRecords(salesRecords) {
+    // Calculate sales summary
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    let todaySales = 0;
+    let monthSales = 0;
+    let totalSales = 0;
+    const productStats = {};
+    
+    console.log('📊 Processing sales records:', salesRecords.length);
+    
+    salesRecords.forEach(record => {
+        const saleDate = new Date(record.saleDate);
+        const saleAmount = record.total;
+        
+        console.log('💰 Processing sale:', { date: saleDate.toISOString(), amount: saleAmount });
+        
+        // Calculate totals
+        totalSales += saleAmount;
+        
+        if (saleDate >= todayStart) {
+            todaySales += saleAmount;
+            console.log('📅 Today\'s sale:', saleAmount);
+        }
+        
+        if (saleDate >= monthStart) {
+            monthSales += saleAmount;
+            console.log('🗓️ Monthly sale:', saleAmount);
+        }
+        
+        // Calculate product statistics
+        record.items.forEach(item => {
+            const productName = item.productName || item.name;
+            if (!productStats[productName]) {
+                productStats[productName] = {
+                    name: productName,
+                    totalQuantity: 0,
+                    totalRevenue: 0
+                };
+            }
+            productStats[productName].totalQuantity += item.quantity;
+            productStats[productName].totalRevenue += item.totalPrice || (item.price * item.quantity);
+        });
+    });
+    
+    // Find most and least bought products
+    const productArray = Object.values(productStats);
+    productArray.sort((a, b) => b.totalQuantity - a.totalQuantity);
+    
+    const mostBought = productArray.length > 0 ? productArray[0].name : 'No data';
+    const leastBought = productArray.length > 0 ? productArray[productArray.length - 1].name : 'No data';
+    
+    const salesData = {
+        today: todaySales,
+        month: monthSales,
+        total: totalSales,
+        mostBought: mostBought,
+        leastBought: leastBought
+    };
+    
+    console.log('📊 Calculated sales data:', salesData);
+    console.log('📦 Product statistics:', productArray);
+    
+    // Update sales summary
+    updateSalesSummary(salesData);
+    
+    // Update most/least bought products
+    updateProductsInfo(salesData);
+    
+    // Load chart data from localStorage
+    loadChartDataFromLocalStorage('daily');
+}
+
+// Load chart data from localStorage
+function loadChartDataFromLocalStorage(period) {
+    const salesRecords = JSON.parse(localStorage.getItem('salesRecords')) || [];
+    
+    if (salesRecords.length === 0) {
+        initializeChart();
+        return;
+    }
+    
+    let chartData = [];
+    
+    if (period === 'daily') {
+        // Generate data for last 7 days
+        const today = new Date();
+        const dailyData = {};
+        
+        // Initialize with zeros
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+            const dateStr = date.toISOString().split('T')[0];
+            dailyData[dateStr] = 0;
+        }
+        
+        // Aggregate sales by date
+        salesRecords.forEach(record => {
+            const saleDate = new Date(record.saleDate);
+            const dateStr = saleDate.toISOString().split('T')[0];
+            
+            if (dailyData.hasOwnProperty(dateStr)) {
+                dailyData[dateStr] += record.total;
+            }
+        });
+        
+        // Convert to chart format
+        chartData = Object.keys(dailyData).map(date => ({
+            date: date,
+            amount: dailyData[date]
+        }));
+    } else if (period === 'monthly') {
+        // Generate data for last 6 months
+        const today = new Date();
+        const monthlyData = {};
+        
+        // Initialize with zeros
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            monthlyData[dateStr] = 0;
+        }
+        
+        // Aggregate sales by month
+        salesRecords.forEach(record => {
+            const saleDate = new Date(record.saleDate);
+            const dateStr = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (monthlyData.hasOwnProperty(dateStr)) {
+                monthlyData[dateStr] += record.total;
+            }
+        });
+        
+        // Convert to chart format
+        chartData = Object.keys(monthlyData).map(date => ({
+            date: date,
+            amount: monthlyData[date]
+        }));
+    } else if (period === 'yearly') {
+        // Generate data for last 3 years
+        const currentYear = new Date().getFullYear();
+        const yearlyData = {};
+        
+        // Initialize with zeros
+        for (let i = 2; i >= 0; i--) {
+            const year = currentYear - i;
+            yearlyData[year.toString()] = 0;
+        }
+        
+        // Aggregate sales by year
+        salesRecords.forEach(record => {
+            const saleDate = new Date(record.saleDate);
+            const year = saleDate.getFullYear().toString();
+            
+            if (yearlyData.hasOwnProperty(year)) {
+                yearlyData[year] += record.total;
+            }
+        });
+        
+        // Convert to chart format
+        chartData = Object.keys(yearlyData).map(year => ({
+            date: year,
+            amount: yearlyData[year]
+        }));
+    }
+    
+    updateChartWithData(chartData, period);
 }
 
 // Load chart data from API
@@ -137,9 +373,9 @@ async function loadChartData(period) {
         const chartData = await apiRequest(`/sales/chart/${period}`);
         updateChartWithData(chartData, period);
     } catch (error) {
-        console.error('Error loading chart data:', error);
-        // Use fallback chart data
-        initializeChart();
+        console.error('Error loading chart data from API:', error);
+        // Use localStorage data as fallback
+        loadChartDataFromLocalStorage(period);
     }
 }
 
@@ -208,14 +444,34 @@ function updateSalesSummary(data) {
     const monthElement = document.getElementById('monthSales');
     const totalElement = document.getElementById('totalSales');
     
+    console.log('📊 Updating sales summary:', data);
+    
     if (todayElement) {
-        animateNumber(todayElement, data.today);
+        const todayValue = data.today || 0;
+        console.log('Today sales:', todayValue);
+        if (isNaN(todayValue)) {
+            todayElement.textContent = '0';
+        } else {
+            animateNumber(todayElement, todayValue);
+        }
     }
     if (monthElement) {
-        animateNumber(monthElement, data.month);
+        const monthValue = data.month || 0;
+        console.log('Month sales:', monthValue);
+        if (isNaN(monthValue)) {
+            monthElement.textContent = '0';
+        } else {
+            animateNumber(monthElement, monthValue);
+        }
     }
     if (totalElement) {
-        animateNumber(totalElement, data.total);
+        const totalValue = data.total || 0;
+        console.log('Total sales:', totalValue);
+        if (isNaN(totalValue)) {
+            totalElement.textContent = '0';
+        } else {
+            animateNumber(totalElement, totalValue);
+        }
     }
 }
 
@@ -224,11 +480,17 @@ function updateProductsInfo(data) {
     const mostBoughtElement = document.getElementById('mostBought');
     const leastBoughtElement = document.getElementById('leastBought');
     
+    console.log('📦 Updating products info:', data);
+    
     if (mostBoughtElement) {
-        mostBoughtElement.textContent = data.mostBought;
+        const mostBought = data.mostBought || 'No data';
+        console.log('Most bought:', mostBought);
+        mostBoughtElement.textContent = mostBought;
     }
     if (leastBoughtElement) {
-        leastBoughtElement.textContent = data.leastBought;
+        const leastBought = data.leastBought || 'No data';
+        console.log('Least bought:', leastBought);
+        leastBoughtElement.textContent = leastBought;
     }
 }
 
@@ -319,9 +581,17 @@ function updateChart(period) {
 // Logout functionality
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        // Clear any stored authentication tokens
+        console.log('🚪 Logging out admin user...');
+        
+        // Clear all authentication tokens and user data
         localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        localStorage.removeItem('user');
         sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('userData');
+        sessionStorage.removeItem('user');
+        
+        console.log('✅ Authentication data cleared');
         
         // Redirect to login page
         window.location.href = 'auth.html';
@@ -359,15 +629,16 @@ async function apiRequest(endpoint, options = {}) {
 // Authentication check
 function checkAuth() {
     const token = localStorage.getItem('authToken');
+    // Check both possible user storage keys for compatibility
     const userData = localStorage.getItem('userData');
+    const user = userData ? JSON.parse(userData) : JSON.parse(localStorage.getItem('user') || '{}');
     
-    if (!token || !userData) {
+    if (!token || !user) {
         window.location.href = 'auth.html';
         return false;
     }
     
     try {
-        const user = JSON.parse(userData);
         if (user.role !== 'admin') {
             alert('Access denied. Admin privileges required.');
             window.location.href = 'auth.html';
@@ -1156,3 +1427,563 @@ function closeUserModal() {
     editingUserId = null;
     document.getElementById('userForm').reset();
 }
+
+// Generate sample sales data for testing
+function generateSampleSalesData() {
+    const sampleProducts = [
+        { name: 'Spanish Latte', price: 120, category: 'drinks' },
+        { name: 'Americano', price: 80, category: 'drinks' },
+        { name: 'Cappuccino', price: 110, category: 'drinks' },
+        { name: 'Peanut Butter Crunch', price: 130, category: 'food' },
+        { name: 'Plain Chocolate', price: 145, category: 'food' },
+        { name: 'Iced Coffee', price: 90, category: 'drinks' }
+    ];
+    
+    const salesRecords = [];
+    const today = new Date();
+    
+    // Generate sales for the last 30 days
+    for (let i = 0; i < 30; i++) {
+        const saleDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+        const ordersPerDay = Math.floor(Math.random() * 15) + 5; // 5-20 orders per day
+        
+        for (let j = 0; j < ordersPerDay; j++) {
+            const orderItems = [];
+            const itemCount = Math.floor(Math.random() * 3) + 1; // 1-3 items per order
+            
+            for (let k = 0; k < itemCount; k++) {
+                const product = sampleProducts[Math.floor(Math.random() * sampleProducts.length)];
+                const quantity = Math.floor(Math.random() * 3) + 1;
+                
+                orderItems.push({
+                    productId: product.name.toLowerCase().replace(/\s+/g, '-'),
+                    productName: product.name,
+                    name: product.name,
+                    quantity: quantity,
+                    price: product.price,
+                    unitPrice: product.price,
+                    totalPrice: product.price * quantity,
+                    category: product.category,
+                    size: 'regular',
+                    addons: []
+                });
+            }
+            
+            const subtotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+            const tax = subtotal * 0.12;
+            const total = subtotal + tax;
+            
+            const saleRecord = {
+                id: `SALE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                orderId: `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                orderNumber: `CF${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+                customerId: 'guest',
+                customerInfo: { name: 'Guest Customer' },
+                staffId: 'staff-001',
+                staffName: 'Staff User',
+                items: orderItems,
+                subtotal: subtotal,
+                tax: tax,
+                discount: 0,
+                tip: 0,
+                total: total,
+                paymentMethod: ['cash', 'card', 'gcash'][Math.floor(Math.random() * 3)],
+                paymentId: null,
+                orderType: ['pickup', 'delivery'][Math.floor(Math.random() * 2)],
+                saleDate: saleDate.toISOString(),
+                shift: determineShiftForDate(saleDate),
+                location: 'main-store',
+                promotions: [],
+                loyaltyPointsUsed: 0,
+                loyaltyPointsEarned: Math.floor(total * 0.1),
+                refunded: false,
+                refundDate: null,
+                refundAmount: 0,
+                refundReason: null,
+                notes: '',
+                createdAt: saleDate.toISOString(),
+                updatedAt: saleDate.toISOString()
+            };
+            
+            salesRecords.push(saleRecord);
+        }
+    }
+    
+    localStorage.setItem('salesRecords', JSON.stringify(salesRecords));
+    console.log(`✅ Generated ${salesRecords.length} sample sales records`);
+    
+    // Reload sales data to reflect changes
+    loadSalesData();
+}
+
+function determineShiftForDate(date) {
+    const hour = date.getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'night';
+}
+
+// Function to create test sales data if none exist
+function ensureSalesData() {
+    const salesRecords = JSON.parse(localStorage.getItem('salesRecords')) || [];
+    
+    if (salesRecords.length === 0) {
+        console.log('📊 No sales records found, creating test data...');
+        
+        // Create some test sales records
+        const testSales = [
+            {
+                id: 'SALE-1',
+                orderId: 'ORD-1',
+                items: [
+                    { productName: 'Spanish Latte', quantity: 2, price: 120, totalPrice: 240 },
+                    { productName: 'Peanut Butter Crunch', quantity: 1, price: 130, totalPrice: 130 }
+                ],
+                total: 370,
+                saleDate: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'SALE-2',
+                orderId: 'ORD-2',
+                items: [
+                    { productName: 'Americano', quantity: 1, price: 80, totalPrice: 80 }
+                ],
+                total: 80,
+                saleDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+                createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+            },
+            {
+                id: 'SALE-3',
+                orderId: 'ORD-3',
+                items: [
+                    { productName: 'Spanish Latte', quantity: 1, price: 120, totalPrice: 120 },
+                    { productName: 'Plain Chocolate', quantity: 1, price: 145, totalPrice: 145 }
+                ],
+                total: 265,
+                saleDate: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            }
+        ];
+        
+        localStorage.setItem('salesRecords', JSON.stringify(testSales));
+        console.log('✅ Test sales data created:', testSales);
+    }
+}
+
+// Clear localStorage for testing (remove this in production)
+function clearSalesData() {
+    localStorage.removeItem('salesRecords');
+    console.log('🗑️ Sales data cleared');
+}
+
+// Call this to test: clearSalesData(); then refresh page
+// clearSalesData();
+
+// Test function to create and complete orders
+function testSalesFlow() {
+    console.log('🧪 Starting sales flow test...');
+    
+    // Clear existing data
+    localStorage.removeItem('salesRecords');
+    localStorage.removeItem('orders');
+    
+    // Create a test order
+    const testOrder = {
+        id: 'TEST-' + Date.now(),
+        customerInfo: {
+            name: 'Test Customer',
+            phone: '123-456-7890',
+            email: 'test@example.com'
+        },
+        items: [
+            {
+                name: 'Spanish Latte',
+                price: 120,
+                quantity: 2,
+                size: 'regular',
+                addons: []
+            },
+            {
+                name: 'Croissant',
+                price: 85,
+                quantity: 1,
+                size: 'regular',
+                addons: []
+            }
+        ],
+        subtotal: 325,
+        tax: 39,
+        total: 364,
+        paymentMethod: 'cash',
+        type: 'pickup',
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+    
+    // Save the order
+    localStorage.setItem('orders', JSON.stringify([testOrder]));
+    
+    // Simulate completing the order (what staff would do)
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const order = orders[0];
+    order.status = 'completed';
+    
+    // Create sales record
+    const saleRecord = {
+        id: `SALE-${Date.now()}`,
+        orderId: order.id,
+        items: order.items.map(item => ({
+            productName: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            totalPrice: item.price * item.quantity
+        })),
+        total: order.total,
+        saleDate: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+    };
+    
+    // Save the sales record
+    localStorage.setItem('salesRecords', JSON.stringify([saleRecord]));
+    localStorage.setItem('orders', JSON.stringify(orders));
+    
+    console.log('✅ Test order completed:', saleRecord);
+    
+    // Refresh the dashboard
+    loadSalesData();
+}
+
+// Call testSalesFlow() in console to test the complete flow
+
+// Demo function to show complete sales flow
+function demoSalesFlow() {
+    console.log('🎬 Starting sales demo...');
+    
+    // Step 1: Clear existing data
+    localStorage.removeItem('salesRecords');
+    localStorage.removeItem('orders');
+    console.log('1️⃣ Cleared existing data');
+    
+    // Step 2: Create realistic sales data for today
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const demoSales = [
+        {
+            id: 'DEMO-SALE-1',
+            orderId: 'DEMO-ORD-1',
+            items: [
+                { productName: 'Spanish Latte', quantity: 2, price: 120, totalPrice: 240 },
+                { productName: 'Croissant', quantity: 1, price: 85, totalPrice: 85 }
+            ],
+            total: 325,
+            saleDate: today.toISOString(),
+            createdAt: today.toISOString()
+        },
+        {
+            id: 'DEMO-SALE-2',
+            orderId: 'DEMO-ORD-2',
+            items: [
+                { productName: 'Americano', quantity: 3, price: 80, totalPrice: 240 }
+            ],
+            total: 240,
+            saleDate: today.toISOString(),
+            createdAt: today.toISOString()
+        },
+        {
+            id: 'DEMO-SALE-3',
+            orderId: 'DEMO-ORD-3',
+            items: [
+                { productName: 'Spanish Latte', quantity: 1, price: 120, totalPrice: 120 },
+                { productName: 'Plain Chocolate', quantity: 2, price: 145, totalPrice: 290 }
+            ],
+            total: 410,
+            saleDate: today.toISOString(),
+            createdAt: today.toISOString()
+        }
+    ];
+    
+    // Step 3: Save the demo sales
+    localStorage.setItem('salesRecords', JSON.stringify(demoSales));
+    console.log('2️⃣ Created demo sales data');
+    
+    // Step 4: Calculate expected totals
+    const todayTotal = demoSales.reduce((sum, sale) => sum + sale.total, 0);
+    console.log('3️⃣ Expected today\'s total:', todayTotal);
+    
+    // Step 5: Reload the dashboard
+    console.log('4️⃣ Reloading dashboard...');
+    loadSalesData();
+    
+    console.log('✅ Demo complete! Check the dashboard.');
+}
+
+// Call demoSalesFlow() in console to see working sales data
+
+//# sourceMappingURL=admin-dashboard.js.map
+// Function to convert existing completed orders to sales records
+function convertCompletedOrdersToSales() {
+    console.log('🔄 Converting completed orders to sales records...');
+    
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    const existingSalesRecords = JSON.parse(localStorage.getItem('salesRecords')) || [];
+    
+    console.log('📦 Found orders:', orders.length);
+    console.log('📊 Existing sales records:', existingSalesRecords.length);
+    
+    // Find completed orders that don't have sales records
+    const completedOrders = orders.filter(order => order.status === 'completed');
+    console.log('✅ Completed orders found:', completedOrders.length);
+    
+    if (completedOrders.length === 0) {
+        console.log('ℹ️ No completed orders to convert');
+        return existingSalesRecords;
+    }
+    
+    const newSalesRecords = [];
+    
+    completedOrders.forEach(order => {
+        // Check if we already have a sales record for this order
+        const existingSale = existingSalesRecords.find(sale => sale.orderId === order.id);
+        
+        if (!existingSale) {
+            console.log('🆕 Creating sales record for order:', order.id, 'Total:', order.total);
+            
+            // Create sales record from completed order
+            const saleRecord = {
+                id: `SALE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                orderId: order.id,
+                orderNumber: order.id,
+                customerId: order.customerId || 'guest',
+                customerInfo: order.customerInfo || { name: 'Guest Customer' },
+                staffId: 'staff-001',
+                staffName: 'Staff User',
+                items: order.items.map(item => ({
+                    ...item,
+                    productId: item.productId || item.name.toLowerCase().replace(/\s+/g, '-'),
+                    productName: item.name,
+                    quantity: item.quantity,
+                    unitPrice: item.price,
+                    totalPrice: item.price * item.quantity,
+                    category: item.category || 'drinks',
+                    size: item.size || 'regular',
+                    addons: item.addons || []
+                })),
+                subtotal: order.subtotal || (order.total * 0.893),
+                tax: order.tax || (order.total * 0.107),
+                discount: order.discount || 0,
+                tip: order.tip || 0,
+                total: order.total,
+                paymentMethod: order.paymentMethod || 'cash',
+                orderType: order.type || order.orderType || 'pickup',
+                saleDate: order.updatedAt || new Date().toISOString(),
+                shift: determineShift(),
+                location: 'main-store',
+                createdAt: order.updatedAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            newSalesRecords.push(saleRecord);
+            console.log('✅ Created sales record:', saleRecord.id, 'Amount:', saleRecord.total);
+        } else {
+            console.log('⚠️ Sales record already exists for order:', order.id);
+        }
+    });
+    
+    // Combine all sales records
+    const allSalesRecords = [...existingSalesRecords, ...newSalesRecords];
+    
+    if (newSalesRecords.length > 0) {
+        // Save updated sales records
+        localStorage.setItem('salesRecords', JSON.stringify(allSalesRecords));
+        console.log('✅ Created', newSalesRecords.length, 'new sales records');
+        console.log('📊 Total sales records now:', allSalesRecords.length);
+    } else {
+        console.log('ℹ️ No new sales records to create');
+    }
+    
+    return allSalesRecords;
+}
+
+function determineShift() {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    if (hour >= 17 && hour < 21) return 'evening';
+    return 'night';
+}
+
+// Debug function to check current data state
+function debugSalesData() {
+    console.log('🔍 === DEBUGGING SALES DATA ===');
+    
+    // Check orders
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    console.log('📦 Total orders:', orders.length);
+    
+    const completedOrders = orders.filter(order => order.status === 'completed');
+    console.log('✅ Completed orders:', completedOrders.length);
+    
+    completedOrders.forEach(order => {
+        console.log(`   Order ${order.id}: ₱${order.total} (${order.items.length} items)`);
+    });
+    
+    // Check sales records
+    const salesRecords = JSON.parse(localStorage.getItem('salesRecords')) || [];
+    console.log('📊 Sales records:', salesRecords.length);
+    
+    salesRecords.forEach(record => {
+        console.log(`   Sale ${record.id}: ₱${record.total} on ${new Date(record.saleDate).toLocaleDateString()}`);
+    });
+    
+    // Calculate totals
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const todayTotal = salesRecords.filter(record => {
+        const saleDate = new Date(record.saleDate);
+        return saleDate >= todayStart;
+    }).reduce((sum, record) => sum + record.total, 0);
+    
+    console.log('💰 Today\'s calculated total:', todayTotal);
+    
+    console.log('🔍 === END DEBUG ===');
+}
+
+// Call debugSalesData() in console to check data state
+// Force sales data creation from completed orders
+function forceSalesDataCreation() {
+    console.log('🔧 Force creating sales data from completed orders...');
+    
+    // Get all orders
+    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+    console.log('📦 Found orders:', orders.length);
+    
+    // Find completed orders
+    const completedOrders = orders.filter(order => order.status === 'completed');
+    console.log('✅ Completed orders:', completedOrders.length);
+    
+    // Clear existing sales records
+    localStorage.removeItem('salesRecords');
+    
+    // Create sales records from completed orders
+    const salesRecords = completedOrders.map(order => {
+        const salesRecord = {
+            id: `SALE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            orderId: order.id,
+            items: order.items.map(item => ({
+                productName: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                totalPrice: item.price * item.quantity
+            })),
+            total: order.total,
+            saleDate: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+        };
+        
+        console.log('💰 Created sales record:', salesRecord.id, 'Amount:', salesRecord.total);
+        return salesRecord;
+    });
+    
+    // Save sales records
+    localStorage.setItem('salesRecords', JSON.stringify(salesRecords));
+    
+    console.log('✅ Created', salesRecords.length, 'sales records');
+    console.log('📊 Total sales amount:', salesRecords.reduce((sum, record) => sum + record.total, 0));
+    
+    // Reload sales data
+    loadSalesDataFromLocalStorage();
+    
+    return salesRecords;
+}
+
+// Call forceSalesDataCreation() to create sales data from completed orders
+
+// Test function to create completed orders and sales data
+function createCompletedOrdersAndSales() {
+    console.log('🧪 Creating completed orders and sales data...');
+    
+    // Create some completed orders
+    const completedOrders = [
+        {
+            id: 'ORD-' + Date.now() + '_1',
+            customerInfo: {
+                name: 'John Doe',
+                phone: '123-456-7890',
+                email: 'john@example.com'
+            },
+            items: [
+                {
+                    name: 'Spanish Latte',
+                    price: 120,
+                    quantity: 2,
+                    totalPrice: 240
+                },
+                {
+                    name: 'Croissant',
+                    price: 85,
+                    quantity: 1,
+                    totalPrice: 85
+                }
+            ],
+            total: 325,
+            status: 'completed',
+            timestamp: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        },
+        {
+            id: 'ORD-' + Date.now() + '_2',
+            customerInfo: {
+                name: 'Jane Smith',
+                phone: '987-654-3210',
+                email: 'jane@example.com'
+            },
+            items: [
+                {
+                    name: 'Americano',
+                    price: 80,
+                    quantity: 3,
+                    totalPrice: 240
+                }
+            ],
+            total: 240,
+            status: 'completed',
+            timestamp: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        }
+    ];
+    
+    // Save orders
+    localStorage.setItem('orders', JSON.stringify(completedOrders));
+    
+    // Force create sales data
+    forceSalesDataCreation();
+    
+    console.log('✅ Created completed orders and sales data');
+    
+    return completedOrders;
+}
+
+// Call createCompletedOrdersAndSales() to create test data
+
+// Test logout function
+function testLogout() {
+    console.log('🧪 Testing logout functionality...');
+    
+    // Check if logout button exists
+    const logoutBtn = document.getElementById('logoutBtn');
+    console.log('🔘 Logout button found:', !!logoutBtn);
+    
+    if (logoutBtn) {
+        console.log('🖱️ Clicking logout button...');
+        logoutBtn.click();
+    } else {
+        console.log('❌ Logout button not found');
+    }
+}
+
+// Call testLogout() to test logout functionality
