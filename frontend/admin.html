@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - MC-PH Coffee Shop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-left">
+                <h1>Admin Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="admin-main">
+            <!-- Sidebar -->
+            <nav class="admin-sidebar">
+                <ul class="sidebar-nav">
+                    <li class="nav-item active">
+                        <a href="#" class="nav-link" data-section="sales">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Sales</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="products">
+                            <i class="fas fa-coffee"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="users">
+                            <i class="fas fa-users"></i>
+                            <span>Users</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Content Area -->
+            <div class="admin-content">
+                <!-- Sales Section -->
+                <section id="sales-section" class="content-section active">
+                    <!-- Sales Summary -->
+                    <div class="sales-summary">
+                        <div class="summary-card">
+                            <h3>Today</h3>
+                            <p class="summary-value">₱<span id="todaySales">0</span></p>
+                        </div>
+                        <div class="summary-card">
+                            <h3>This Month</h3>
+                            <p class="summary-value">₱<span id="monthSales">0</span></p>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Total Sales</h3>
+                            <p class="summary-value">₱<span id="totalSales">0</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Sales Chart -->
+                    <div class="sales-chart-container">
+                        <div class="chart-header">
+                            <h3>Sales Chart</h3>
+                            <select id="chartPeriod" class="chart-filter">
+                                <option value="daily">Daily</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                        </div>
+                        <div class="chart-area">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Most/Least Bought Products -->
+                    <div class="products-info">
+                        <div class="product-card">
+                            <h3>Most Bought</h3>
+                            <p id="mostBought">Spanish Latte</p>
+                        </div>
+                        <div class="product-card">
+                            <h3>Least Bought</h3>
+                            <p id="leastBought">Americano</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Products Section -->
+                <section id="products-section" class="content-section">
+                    <div class="section-header">
+                        <h2>Products Management</h2>
+                        <div class="section-actions">
+                            <select id="productCategory" class="category-filter">
+                                <option value="">All Categories</option>
+                                <option value="drinks">Drinks</option>
+                                <option value="food">Food</option>
+                                <option value="add-ons">Add-ons</option>
+                            </select>
+                            <button class="primary-btn" id="addProductBtn">
+                                <i class="fas fa-plus"></i>
+                                Add Product
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="products-container">
+                        <div class="products-tabs">
+                            <button class="tab-btn active" data-category="drinks">Drinks</button>
+                            <button class="tab-btn" data-category="food">Food</button>
+                            <button class="tab-btn" data-category="add-ons">Add-ons</button>
+                        </div>
+                        
+                        <div class="products-grid" id="productsGrid">
+                            <!-- Products will be loaded here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Users Section -->
+                <section id="users-section" class="content-section">
+                    <div class="section-header">
+                        <h2>User Management</h2>
+                        <div class="section-actions">
+                            <select id="userRoleFilter" class="role-filter">
+                                <option value="">All Roles</option>
+                                <option value="admin">Admin</option>
+                                <option value="staff">Staff</option>
+                                <option value="customer">Customer</option>
+                            </select>
+                            <button class="primary-btn" id="addUserBtn">
+                                <i class="fas fa-plus"></i>
+                                Add User
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="users-container">
+                        <div class="users-table-container">
+                            <table class="users-table" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Date Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Users will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="no-users" id="noUsersMessage" style="display: none;">
+                            <i class="fas fa-users"></i>
+                            <p>No users found.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <div class="footer-content">
+                <span id="currentDateTime"></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">Add User</h2>
+                <button class="close-btn" id="closeUserModalBtn">&times;</button>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="userFirstName">First Name *</label>
+                    <input type="text" id="userFirstName" name="firstName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userLastName">Last Name *</label>
+                    <input type="text" id="userLastName" name="lastName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userEmail">Email *</label>
+                    <input type="email" id="userEmail" name="email" required>
+                </div>
+                
+                <div class="form-group" id="passwordGroup">
+                    <label for="userPassword">Password *</label>
+                    <input type="password" id="userPassword" name="password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userRole">Role *</label>
+                    <select id="userRole" name="role" required>
+                        <option value="">Select Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="staff">Staff</option>
+                        <option value="customer">Customer</option>
+                    </select>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" id="cancelUserBtn">Cancel</button>
+                    <button type="submit" class="primary-btn">
+                        <span id="userSubmitBtnText">Add User</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Product</h2>
+                <button class="close-btn" id="closeProductModalBtn">&times;</button>
+            </div>
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="productCategory">Category *</label>
+                    <select id="productCategorySelect" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="drinks">Drinks</option>
+                        <option value="food">Food</option>
+                        <option value="add-ons">Add-ons</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productName">Name *</label>
+                    <input type="text" id="productName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productDescription">Description</label>
+                    <textarea id="productDescription" name="description" rows="3"></textarea>
+                </div>
+                
+                <!-- Drinks specific fields -->
+                <div id="drinksFields" class="category-fields">
+                    <div class="form-group">
+                        <label>Sizes & Prices</label>
+                        <div class="size-price-container">
+                            <div class="size-price-item">
+                                <input type="text" placeholder="Size (e.g., Small)" class="size-input">
+                                <input type="number" placeholder="Price" class="price-input" min="0" step="0.01">
+                                <button type="button" class="remove-size-btn" data-remove-size>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-size-btn" id="addSizeBtn">
+                            <i class="fas fa-plus"></i> Add Size
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Food specific fields -->
+                <div id="foodFields" class="category-fields">
+                    <div class="form-group">
+                        <label for="foodPrice">Price *</label>
+                        <input type="number" id="foodPrice" name="price" min="0" step="0.01">
+                    </div>
+                </div>
+                
+                <!-- Add-ons specific fields -->
+                <div id="add-onsFields" class="category-fields">
+                    <div class="form-group">
+                        <label for="addonPrice">Price *</label>
+                        <input type="number" id="addonPrice" name="price" min="0" step="0.01">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productImage">Product Image</label>
+                    <div class="image-upload-container">
+                        <input type="file" id="productImage" accept="image/*">
+                        <div class="image-preview" id="imagePreview">
+                            <div class="image-placeholder">
+                                <i class="fas fa-image"></i>
+                                <p>Click to upload image</p>
+                            </div>
+                        </div>
+                        <canvas id="cropCanvas" style="display: none;"></canvas>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="productInStock" name="inStock" checked>
+                        In Stock
+                    </label>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="secondary-btn" id="cancelProductBtn">Cancel</button>
+                    <button type="submit" class="primary-btn">
+                        <span id="submitBtnText">Add Product</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Crop Modal -->
+    <div id="cropModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crop Image</h2>
+                <button class="close-btn" id="closeCropModalBtn">&times;</button>
+            </div>
+            <div class="crop-container">
+                <div class="crop-area">
+                    <canvas id="cropPreview"></canvas>
+                </div>
+                <div class="crop-controls">
+                    <button type="button" class="secondary-btn" id="cancelCropBtn">Cancel</button>
+                    <button type="button" class="primary-btn" id="applyCropBtn">Apply Crop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

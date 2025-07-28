@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #results {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard Test</h1>
+    
+    <div class="test-container">
+        <h2>Authentication Status</h2>
+        <div id="authStatus" class="test-result loading">Checking authentication...</div>
+        <button onclick="checkAuth()">Check Auth</button>
+        <button onclick="clearAuth()">Clear Auth</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>API Tests</h2>
+        <button onclick="testProductsAPI()">Test Products API</button>
+        <button onclick="testCreateProduct()">Test Create Product</button>
+        <button onclick="testDeleteProduct()">Test Delete Product</button>
+        <div id="apiResults" class="test-result loading">Ready to test...</div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const resultClass = type === 'error' ? 'error' : type === 'success' ? 'success' : 'loading';
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `test-result ${resultClass}`;
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            results.appendChild(logEntry);
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            const authStatus = document.getElementById('authStatus');
+            
+            if (!token || !userData) {
+                authStatus.className = 'test-result error';
+                authStatus.textContent = 'Not authenticated. Please login first.';
+                log('Authentication check failed - no token or user data', 'error');
+                return false;
+            }
+            
+            try {
+                const user = JSON.parse(userData);
+                if (user.role !== 'admin') {
+                    authStatus.className = 'test-result error';
+                    authStatus.textContent = `Access denied. Role: ${user.role}, Expected: admin`;
+                    log(`Role check failed - user role: ${user.role}`, 'error');
+                    return false;
+                }
+                
+                authStatus.className = 'test-result success';
+                authStatus.textContent = `Authenticated as admin: ${user.email}`;
+                log(`Authentication successful - user: ${user.email}, role: ${user.role}`, 'success');
+                return true;
+            } catch (error) {
+                authStatus.className = 'test-result error';
+                authStatus.textContent = 'Error parsing user data';
+                log(`Error parsing user data: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            const authStatus = document.getElementById('authStatus');
+            authStatus.className = 'test-result loading';
+            authStatus.textContent = 'Authentication cleared';
+            log('Authentication data cleared', 'info');
+        }
+        
+        async function apiRequest(endpoint, options = {}) {
+            const baseUrl = '/api';
+            const url = `${baseUrl}${endpoint}`;
+            
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            };
+            
+            const mergedOptions = { ...defaultOptions, ...options };
+            
+            try {
+                const response = await fetch(url, mergedOptions);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API request failed:', error);
+                throw error;
+            }
+        }
+        
+        async function testProductsAPI() {
+            const apiResults = document.getElementById('apiResults');
+            apiResults.className = 'test-result loading';
+            apiResults.textContent = 'Testing products API...';
+            
+            try {
+                log('Testing GET /api/products', 'info');
+                const products = await apiRequest('/products');
+                
+                apiResults.className = 'test-result success';
+                apiResults.textContent = `Success! Found ${products.length} products`;
+                log(`Products API test successful - found ${products.length} products`, 'success');
+                
+                // Display first few products
+                products.slice(0, 3).forEach(product => {
+                    log(`Product: ${product.name} (${product.category})`, 'info');
+                });
+                
+            } catch (error) {
+                apiResults.className = 'test-result error';
+                apiResults.textContent = `Error: ${error.message}`;
+                log(`Products API test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCreateProduct() {
+            const apiResults = document.getElementById('apiResults');
+            apiResults.className = 'test-result loading';
+            apiResults.textContent = 'Testing create product...';
+            
+            try {
+                log('Testing POST /api/products', 'info');
+                
+                const testProduct = {
+                    name: 'Test Product',
+                    description: 'This is a test product',
+                    category: 'drinks',
+                    sizes: [
+                        { name: 'Small', price: 100 },
+                        { name: 'Medium', price: 120 },
+                        { name: 'Large', price: 140 }
+                    ],
+                    inStock: true
+                };
+                
+                const result = await apiRequest('/products', {
+                    method: 'POST',
+                    body: JSON.stringify(testProduct)
+                });
+                
+                apiResults.className = 'test-result success';
+                apiResults.textContent = `Success! Created product: ${result.name}`;
+                log(`Create product test successful - created: ${result.name}`, 'success');
+                
+            } catch (error) {
+                apiResults.className = 'test-result error';
+                apiResults.textContent = `Error: ${error.message}`;
+                log(`Create product test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDeleteProduct() {
+            const apiResults = document.getElementById('apiResults');
+            apiResults.className = 'test-result loading';
+            apiResults.textContent = 'Testing delete product...';
+            
+            try {
+                log('Testing DELETE /api/products', 'info');
+                
+                // First, get products to find one to delete
+                const products = await apiRequest('/products');
+                const testProduct = products.find(p => p.name === 'Test Product');
+                
+                if (!testProduct) {
+                    throw new Error('No test product found to delete');
+                }
+                
+                await apiRequest(`/products/${testProduct._id}`, {
+                    method: 'DELETE'
+                });
+                
+                apiResults.className = 'test-result success';
+                apiResults.textContent = `Success! Deleted product: ${testProduct.name}`;
+                log(`Delete product test successful - deleted: ${testProduct.name}`, 'success');
+                
+            } catch (error) {
+                apiResults.className = 'test-result error';
+                apiResults.textContent = `Error: ${error.message}`;
+                log(`Delete product test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Test page loaded', 'info');
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

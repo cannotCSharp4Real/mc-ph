@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Menu Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-panel { background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 3px; }
+        .loading { background: #ffeb3b; }
+        .loaded { background: #4caf50; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Menu Page Debug Test</h1>
+    
+    <div class="debug-panel">
+        <h2>Loading Status</h2>
+        <div id="domStatus" class="status loading">Checking DOM...</div>
+        <div id="apiStatus" class="status loading">Checking API...</div>
+        <div id="jsStatus" class="status loading">Checking JavaScript...</div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Test Results</h2>
+        <div id="results">Running tests...</div>
+    </div>
+
+    <script>
+        console.log('🚀 Debug test started');
+        
+        let results = [];
+        
+        // Test 1: DOM Loading
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('domStatus').textContent = 'DOM loaded successfully';
+            document.getElementById('domStatus').className = 'status loaded';
+            results.push('✅ DOM loaded successfully');
+            
+            // Test 2: API Call
+            fetch('/api/products')
+                .then(response => response.json())
+                .then(products => {
+                    document.getElementById('apiStatus').textContent = `API working - ${products.length} products found`;
+                    document.getElementById('apiStatus').className = 'status loaded';
+                    results.push(`✅ API working - ${products.length} products found`);
+                    
+                    // Test 3: JavaScript functionality
+                    if (typeof products === 'object' && Array.isArray(products)) {
+                        document.getElementById('jsStatus').textContent = 'JavaScript processing working';
+                        document.getElementById('jsStatus').className = 'status loaded';
+                        results.push('✅ JavaScript processing working');
+                    } else {
+                        document.getElementById('jsStatus').textContent = 'JavaScript processing failed';
+                        document.getElementById('jsStatus').className = 'status error';
+                        results.push('❌ JavaScript processing failed');
+                    }
+                    
+                    // Update results
+                    document.getElementById('results').innerHTML = results.join('<br>');
+                })
+                .catch(error => {
+                    document.getElementById('apiStatus').textContent = 'API error: ' + error.message;
+                    document.getElementById('apiStatus').className = 'status error';
+                    results.push('❌ API error: ' + error.message);
+                    document.getElementById('results').innerHTML = results.join('<br>');
+                });
+        });
+    </script>
+</body>
+</html>

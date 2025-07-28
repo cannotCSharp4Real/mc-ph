@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-actions > * { margin-left: 10px; }
+        .cart-icon, .profile-dropdown { display: none; }
+        .sign-btn { display: none; }
+        button { padding: 10px 15px; cursor: pointer; }
+        .test-panel { background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MC-PH Coffee Shop</h1>
+        <div class="header-actions">
+            <div class="cart-icon" id="cartIcon">🛒 Cart</div>
+            <div class="profile-dropdown" id="profileDropdown">👤 Profile</div>
+            <button class="sign-btn" id="signBtn">Sign In / Sign Up</button>
+        </div>
+    </div>
+
+    <div class="test-panel">
+        <h2>Authentication Test Panel</h2>
+        <p>Current Status: <span id="authStatus">Checking...</span></p>
+        <button onclick="simulateGuestUser()">Simulate Guest User</button>
+        <button onclick="simulateCustomer()">Simulate Customer</button>
+        <button onclick="clearAuth()">Clear Auth</button>
+    </div>
+
+    <div id="productsContainer">
+        <h2>Products</h2>
+        <div id="productsList">Loading...</div>
+    </div>
+
+    <script>
+        let isAuthenticated = false;
+        let currentUser = null;
+
+        function checkAuthStatus() {
+            const token = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('userData');
+            
+            if (token && userData) {
+                isAuthenticated = true;
+                currentUser = JSON.parse(userData);
+            } else {
+                isAuthenticated = false;
+                currentUser = null;
+            }
+            
+            updateStatus();
+        }
+
+        function updateStatus() {
+            const statusEl = document.getElementById('authStatus');
+            if (isAuthenticated && currentUser) {
+                statusEl.textContent = `Authenticated as ${currentUser.role} (${currentUser.email})`;
+            } else {
+                statusEl.textContent = 'Not authenticated (Guest)';
+            }
+        }
+
+        function updateHeaderUI() {
+            const cartIcon = document.getElementById('cartIcon');
+            const profileDropdown = document.getElementById('profileDropdown');
+            const signBtn = document.getElementById('signBtn');
+            
+            if (isAuthenticated && currentUser && currentUser.role === 'customer') {
+                cartIcon.style.display = 'block';
+                profileDropdown.style.display = 'block';
+                signBtn.style.display = 'none';
+                console.log('Showing customer UI');
+            } else {
+                cartIcon.style.display = 'none';
+                profileDropdown.style.display = 'none';
+                signBtn.style.display = 'block';
+                console.log('Showing guest UI');
+            }
+        }
+
+        function simulateGuestUser() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            checkAuthStatus();
+            updateHeaderUI();
+        }
+
+        function simulateCustomer() {
+            localStorage.setItem('authToken', 'test-token');
+            localStorage.setItem('userData', JSON.stringify({
+                id: 'test-user',
+                email: 'test@example.com',
+                role: 'customer'
+            }));
+            checkAuthStatus();
+            updateHeaderUI();
+        }
+
+        function clearAuth() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            checkAuthStatus();
+            updateHeaderUI();
+        }
+
+        async function loadProducts() {
+            try {
+                console.log('Loading products...');
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                console.log('Products loaded:', products);
+                
+                const productsList = document.getElementById('productsList');
+                productsList.innerHTML = products.map(product => 
+                    `<div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0;">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p>Price: ₱${product.price}</p>
+                    </div>`
+                ).join('');
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsList').innerHTML = 'Error loading products';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            checkAuthStatus();
+            updateHeaderUI();
+            loadProducts();
+        });
+    </script>
+</body>
+</html>

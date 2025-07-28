@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Coffee Shop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/cart.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="menu.html">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Menu</span>
+                    </a>
+                </div>
+                <h1>Your Cart</h1>
+                <div class="header-actions">
+                    <div class="profile-dropdown">
+                        <i class="fas fa-user-circle"></i>
+                        <div class="dropdown-content">
+                            <a href="#" id="orderHistoryLink">Orders</a>
+                            <a href="#" id="logoutLink">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Cart Items -->
+        <div class="cart-content">
+            <div class="cart-items" id="cartItems">
+                <!-- Cart items will be populated here -->
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h3>Order Summary</h3>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">₱0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Delivery Fee:</span>
+                    <span id="deliveryFee">₱0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="total">₱0.00</span>
+                </div>
+            </div>
+
+            <!-- Order Type Selection -->
+            <div class="order-type-section">
+                <h3>Order Type</h3>
+                <div class="order-type-options">
+                    <button class="order-type-btn active" id="pickupBtn">
+                        <i class="fas fa-store"></i>
+                        <span>Pickup</span>
+                    </button>
+                    <button class="order-type-btn" id="deliveryBtn">
+                        <i class="fas fa-truck"></i>
+                        <span>Delivery</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Delivery Information (hidden by default) -->
+            <div class="delivery-info" id="deliveryInfo" style="display: none;">
+                <h3>Delivery Information</h3>
+                <form id="deliveryForm">
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="tel" id="phoneNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Complete Address</label>
+                        <textarea id="address" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="landmark">Landmark (Optional)</label>
+                        <input type="text" id="landmark">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Place Order Button -->
+            <button class="place-order-btn" id="placeOrderBtn">Place Order</button>
+        </div>
+    </div>
+
+    <!-- Order History Modal -->
+    <div class="modal" id="orderHistoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Order History</h3>
+                <button class="modal-close" id="closeOrderHistoryModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="order-history-list" id="orderHistoryList">
+                    <!-- Order history will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/notifications.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+</html>

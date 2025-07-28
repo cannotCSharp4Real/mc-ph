@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC-PH Coffee Shop</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <!-- Logo -->
+            <div class="logo">
+                <img src="images/logo.svg" alt="MC-PH Coffee Shop" class="logo-img">
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="nav-menu">
+                <a href="menu.html" class="nav-link">Menu</a>
+            </nav>
+            
+            <!-- Header Actions -->
+            <div class="header-actions">
+                <!-- Cart Icon -->
+                <div class="cart-icon">
+                    <img src="images/shopping cart.svg" alt="Cart" class="cart-img">
+                    <span class="cart-count" id="cartCount">0</span>
+                </div>
+                
+                <!-- Profile Dropdown -->
+                <div class="profile-dropdown">
+                    <img src="images/profile.svg" alt="Profile" class="profile-img" id="profileIcon">
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="#" class="dropdown-item" id="myProfile">My Profile</a>
+                        <a href="#" class="dropdown-item" id="myOrders">Orders</a>
+                        <a href="#" class="dropdown-item" id="logout">Logout</a>
+                    </div>
+                </div>
+                
+                <!-- Sign In/Sign Up Button (for guests) -->
+                <button class="sign-btn" id="signBtn">Sign In / Sign Up</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="hero-section">
+        <div class="hero-container">
+            <div class="hero-content">
+                <img src="images/storefront.jpg" alt="Make Coffee Shop Storefront" class="hero-image">
+                <div class="hero-overlay">
+                    <button class="browse-btn" id="browseBtn">Browse</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mission and Vision Section -->
+    <section class="mission-vision-section">
+        <div class="mission-vision-container">
+            <div class="vision-card">
+                <h2 class="section-title">Our Vision</h2>
+                <p class="section-content">
+                    To be a beloved neighborhood coffee where every cup of coffee inspires connection, joy, and unforgettable moments—one sip at a time.
+                </p>
+            </div>
+            
+            <div class="mission-card">
+                <h2 class="section-title">Our Mission</h2>
+                <p class="section-content">
+                    We are committed to crafting quality, great-tasting coffee with passion. Through warm, friendly service and a welcoming atmosphere, we strive to create a meaningful experience that brings people together and enriches our community.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="footer-container">
+            <!-- Business Info -->
+            <div class="business-info">
+                <p class="business-details">SEC & IPO regd. est. 2021</p>
+                <p class="business-details">Always Bean Good ☕</p>
+                <p class="business-details">Open Daily 7am-11pm</p>
+                <p class="business-details">FREE DELIVERY w/in Marikina</p>
+                <p class="business-details">30 JP Laurel Sr. St San Roque Marikina City</p>
+            </div>
+            
+            <!-- Social Media Links -->
+            <div class="social-links">
+                <a href="#" class="social-link">Facebook</a>
+                <a href="#" class="social-link">Instagram</a>
+                <a href="#" class="social-link">Threads</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/notifications.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html>
