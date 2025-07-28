@@ -14,4 +14,4 @@ services:
           name: mc-ph-app
           property: port
       - key: MONGODB_URI
-        value: CHANGE_THIS_TO_YOUR_ATLAS_CONNECTION_STRING
+        value: mongodb+srv://renaissanceibarragiron:AaDxntQRNMCE3kIr@cluster0.it9wldo.mongodb.net/
