@@ -35,6 +35,8 @@ body {
 
 .logo {
     flex: 1;
+    display: flex;
+    justify-content: flex-start;
 }
 
 .logo-img {
@@ -64,8 +66,10 @@ body {
 }
 
 .header-actions {
+    flex: 1;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 1.5rem;
 }
 
@@ -183,7 +187,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 0;
-    background-color: #f8f8f8;
+    background-color: transparent; /* Remove grey background */
 }
 
 .hero-container {
