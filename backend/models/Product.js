@@ -1,4 +1,4 @@
-const { getDB } = require('../config/database');
+const { getDB } = require('../config/databaseMongoose');
 
 class Product {
     constructor(productData) {
