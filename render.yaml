@@ -13,3 +13,5 @@ services:
           type: web
           name: mc-ph-app
           property: port
+      - key: MONGODB_URI
+        value: CHANGE_THIS_TO_YOUR_ATLAS_CONNECTION_STRING
