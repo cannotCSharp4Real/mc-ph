@@ -14,4 +14,4 @@ services:
           name: mc-ph-app
           property: port
       - key: MONGODB_URI
-        value: mongodb+srv://renaissanceibarragiron:AaDxntQRNMCE3kIr@cluster0.it9wldo.mongodb.net/
+        value: mongodb+srv://renaissanceibarragiron:AaDxntQRNMCE3kIr@cluster0.it9wldo.mongodb.net/coffee-shop?retryWrites=true&w=majority
