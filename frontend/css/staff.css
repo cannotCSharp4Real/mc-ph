@@ -21,7 +21,7 @@ body {
 
 /* Header Styles */
 .header {
-    background-color: #8B4513;
+    background-color: #d4a574;
     color: white;
     padding: 1rem 0;
     position: sticky;
@@ -125,7 +125,7 @@ body {
 
 .nav-item.active {
     background-color: #fff;
-    border-left-color: #8B4513;
+    border-left-color: #d4a574;
 }
 
 .nav-indicator {
@@ -135,7 +135,7 @@ body {
 }
 
 .nav-item.active .nav-indicator {
-    color: #8B4513;
+    color: #d4a574;
 }
 
 .sidebar-footer {
@@ -222,7 +222,7 @@ body {
 
 .order-id {
     font-weight: bold;
-    color: #8B4513;
+    color: #d4a574;
     font-size: 14px;
 }
 
@@ -283,7 +283,7 @@ body {
 }
 
 .complete-btn {
-    background-color: #8B4513;
+    background-color: #d4a574;
     color: white;
 }
 
@@ -309,7 +309,7 @@ body {
     position: fixed;
     bottom: 15px;
     right: 15px;
-    background-color: rgba(139, 69, 19, 0.9);
+    background-color: #d4a574;
     color: white;
     padding: 0.4rem 0.8rem;
     border-radius: 8px;

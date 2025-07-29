@@ -42,9 +42,9 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="menu-container">
-            <!-- Sidebar for Search and Categories -->
-            <aside class="sidebar">
-                <div class="sidebar-content">
+            <!-- Products Display -->
+            <section class="products-section">
+                <div class="products-header">
                     <!-- Search Section -->
                     <div class="search-section">
                         <div class="search-box">
@@ -54,35 +54,11 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Categories Section -->
-                    <div class="categories-section">
-                        <h3>Drinks</h3>
-                        <div class="category-list">
-                            <div class="category-item" data-category="drinks" data-subcategory="Alternative Brews">Alternative Brews</div>
-                            <div class="category-item" data-category="drinks" data-subcategory="Coffee">Coffee</div>
-                            <div class="category-item" data-category="drinks" data-subcategory="Milkshake">Milkshake</div>
-                            <div class="category-item" data-category="drinks" data-subcategory="Refreshers">Refreshers</div>
-                            <div class="category-item" data-category="drinks" data-subcategory="Matcha Series">Matcha Series</div>
-                        </div>
-
-                        <h3>Food</h3>
-                        <div class="category-list">
-                            <div class="category-item" data-category="food" data-subcategory="Coffee">Coffee</div>
-                            <div class="category-item" data-category="food" data-subcategory="Croissant">Croissant</div>
-                            <div class="category-item" data-category="food" data-subcategory="Pastry">Pastry</div>
-                            <div class="category-item" data-category="food" data-subcategory="Sandwiches">Sandwiches</div>
-                            <div class="category-item" data-category="food" data-subcategory="Snacks">Snacks</div>
-                        </div>
+                    
+                    <div class="header-right">
+                        <h2>Our Menu</h2>
+                        <div class="results-count" id="resultsCount">Loading...</div>
                     </div>
-                </div>
-            </aside>
-
-            <!-- Products Display -->
-            <section class="products-section">
-                <div class="products-header">
-                    <h2>Our Menu</h2>
-                    <div class="results-count" id="resultsCount">Loading...</div>
                 </div>
 
                 <div class="products-grid" id="productsGrid">

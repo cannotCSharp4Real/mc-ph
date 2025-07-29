@@ -11,7 +11,6 @@ console.log('🚀 Menu.js initializing...');
 
 // DOM elements
 let searchInput, searchBtn, productsGrid, resultsCount;
-let allItemsBtn, drinksBtn, foodBtn, clearSearchBtn;
 
 // Initialize DOM elements
 function initializeDOM() {
@@ -21,12 +20,6 @@ function initializeDOM() {
     searchBtn = document.getElementById('searchBtn');
     productsGrid = document.getElementById('productsGrid');
     resultsCount = document.getElementById('resultsCount');
-    
-    // Navigation buttons
-    allItemsBtn = document.getElementById('allItemsBtn');
-    drinksBtn = document.getElementById('drinksBtn');
-    foodBtn = document.getElementById('foodBtn');
-    clearSearchBtn = document.getElementById('clearSearchBtn');
     
     // Check if critical elements exist
     if (!productsGrid) {
@@ -80,34 +73,6 @@ function setupEventListeners() {
             if (e.key === 'Enter') {
                 handleSearch();
             }
-        });
-    }
-    
-    // Navigation buttons
-    if (allItemsBtn) {
-        allItemsBtn.addEventListener('click', function() {
-            setActiveNavButton('all');
-            filterByCategory('all');
-        });
-    }
-    
-    if (drinksBtn) {
-        drinksBtn.addEventListener('click', function() {
-            setActiveNavButton('drinks');
-            filterByCategory('drinks');
-        });
-    }
-    
-    if (foodBtn) {
-        foodBtn.addEventListener('click', function() {
-            setActiveNavButton('food');
-            filterByCategory('food');
-        });
-    }
-    
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', function() {
-            clearSearch();
         });
     }
     
@@ -837,28 +802,6 @@ function updateHeaderUI() {
     }
 }
 
-// Set active navigation button
-function setActiveNavButton(activeType) {
-    // Remove active class from all buttons
-    const navButtons = [allItemsBtn, drinksBtn, foodBtn];
-    navButtons.forEach(btn => {
-        if (btn) btn.classList.remove('active');
-    });
-    
-    // Add active class to the selected button
-    switch(activeType) {
-        case 'all':
-            if (allItemsBtn) allItemsBtn.classList.add('active');
-            break;
-        case 'drinks':
-            if (drinksBtn) drinksBtn.classList.add('active');
-            break;
-        case 'food':
-            if (foodBtn) foodBtn.classList.add('active');
-            break;
-    }
-}
-
 // Filter products by category
 function filterByCategory(category) {
     console.log('🔍 Filtering by category:', category);
@@ -871,19 +814,6 @@ function filterByCategory(category) {
     
     renderProducts();
     updateResultsCount();
-}
-
-// Clear search
-function clearSearch() {
-    console.log('🗑️ Clearing search...');
-    
-    if (searchInput) {
-        searchInput.value = '';
-    }
-    
-    // Reset to all products
-    setActiveNavButton('all');
-    filterByCategory('all');
 }
 
 // Show order history
