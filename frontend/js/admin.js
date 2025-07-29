@@ -897,7 +897,7 @@ function editProduct(productId) {
         const container = document.querySelector('.size-price-container');
         container.innerHTML = '';
         product.sizes.forEach(size => {
-            addSizePrice(size.name, size.price);
+            addSizePrice(size.size, size.price);
         });
     } else if (product.category === 'food') {
         document.getElementById('foodPrice').value = product.price;
@@ -996,7 +996,7 @@ function getSizesFromForm() {
         
         if (sizeInput && priceInput && sizeInput.value && priceInput.value) {
             sizes.push({
-                name: sizeInput.value,
+                size: sizeInput.value,
                 price: parseFloat(priceInput.value)
             });
         }

@@ -98,6 +98,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
             description: description || '',
             category,
             inStock: inStock !== undefined ? inStock : true,
+            createdBy: req.user.id,
             createdAt: new Date(),
             updatedAt: new Date()
         };
@@ -136,23 +137,26 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
             description: description || '',
             category,
             inStock: inStock !== undefined ? inStock : true,
+            updatedBy: req.user.id,
             updatedAt: new Date()
         };
+        
+        let updateOperation = { $set: updateData };
         
         // Add category-specific fields
         if (category === 'drinks') {
             updateData.sizes = sizes;
             // Remove price field if it exists
-            updateData.$unset = { price: "" };
+            updateOperation.$unset = { price: "" };
         } else {
             updateData.price = parseFloat(price);
             // Remove sizes field if it exists
-            updateData.$unset = { sizes: "" };
+            updateOperation.$unset = { sizes: "" };
         }
         
         const result = await db.collection('products').updateOne(
             { _id: new ObjectId(req.params.id) },
-            { $set: updateData, ...(updateData.$unset && { $unset: updateData.$unset }) }
+            updateOperation
         );
         
         if (result.matchedCount === 0) {

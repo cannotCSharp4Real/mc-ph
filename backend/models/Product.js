@@ -28,7 +28,7 @@ class Product {
         return {
             $jsonSchema: {
                 bsonType: "object",
-                required: ["name", "description", "category", "price", "createdBy"],
+                required: ["name", "description", "category", "createdBy"],
                 properties: {
                     name: {
                         bsonType: "string",
@@ -51,19 +51,9 @@ class Product {
                         description: "Product subcategory"
                     },
                     price: {
-                        bsonType: "object",
-                        required: ["base"],
-                        properties: {
-                            base: {
-                                bsonType: "double",
-                                minimum: 0,
-                                description: "Base price for the product"
-                            },
-                            small: { bsonType: ["double", "null"] },
-                            medium: { bsonType: ["double", "null"] },
-                            large: { bsonType: ["double", "null"] },
-                            extraLarge: { bsonType: ["double", "null"] }
-                        }
+                        bsonType: ["double", "null"],
+                        minimum: 0,
+                        description: "Price for food items and add-ons"
                     },
                     sizes: {
                         bsonType: "array",
