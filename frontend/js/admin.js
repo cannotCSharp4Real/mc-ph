@@ -81,13 +81,9 @@ function initializeDashboard() {
     // Modal close handlers
     window.addEventListener('click', function(event) {
         const productModal = document.getElementById('productModal');
-        const cropModal = document.getElementById('cropModal');
         
         if (event.target === productModal) {
             closeProductModal();
-        }
-        if (event.target === cropModal) {
-            closeCropModal();
         }
     });
 }
@@ -712,7 +708,6 @@ if ('ontouchstart' in window) {
 let currentProducts = [];
 let currentCategory = 'drinks';
 let editingProductId = null;
-let cropImageData = null;
 
 // User Management Variables
 let currentUsers = [];
@@ -764,21 +759,6 @@ function initializeProductManagement() {
         addSizeBtn.addEventListener('click', () => addSizePrice());
     }
     
-    // Crop modal buttons
-    const closeCropModalBtn = document.getElementById('closeCropModalBtn');
-    const cancelCropBtn = document.getElementById('cancelCropBtn');
-    const applyCropBtn = document.getElementById('applyCropBtn');
-    
-    if (closeCropModalBtn) {
-        closeCropModalBtn.addEventListener('click', closeCropModal);
-    }
-    if (cancelCropBtn) {
-        cancelCropBtn.addEventListener('click', closeCropModal);
-    }
-    if (applyCropBtn) {
-        applyCropBtn.addEventListener('click', applyCrop);
-    }
-    
     // Category select change
     const categorySelect = document.getElementById('productCategorySelect');
     if (categorySelect) {
@@ -791,12 +771,6 @@ function initializeProductManagement() {
     const productForm = document.getElementById('productForm');
     if (productForm) {
         productForm.addEventListener('submit', handleProductSubmit);
-    }
-    
-    // Image upload handler
-    const productImage = document.getElementById('productImage');
-    if (productImage) {
-        productImage.addEventListener('change', handleImageUpload);
     }
     
     // Load initial products
@@ -842,13 +816,6 @@ function renderProducts(products) {
     
     productsGrid.innerHTML = products.map(product => `
         <div class="product-card">
-            ${product.image ? 
-                `<img src="${product.image}" alt="${product.name}" class="product-image">` :
-                `<div class="product-image-placeholder">
-                    <i class="fas fa-image"></i>
-                    <p>No image</p>
-                </div>`
-            }
             <div class="product-info">
                 <h3>${product.name}</h3>
                 <p>${product.description || 'No description'}</p>
@@ -987,11 +954,6 @@ async function handleProductSubmit(e) {
         productData.price = parseFloat(priceValue);
     }
     
-    // Add image if cropped
-    if (cropImageData) {
-        productData.image = cropImageData;
-    }
-    
     console.log('Submitting product data:', productData);
     
     try {
@@ -1078,61 +1040,7 @@ function removeSizePrice(button) {
 function closeProductModal() {
     document.getElementById('productModal').style.display = 'none';
     editingProductId = null;
-    cropImageData = null;
     document.getElementById('productForm').reset();
-}
-
-// Image upload handling
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        showCropModal(e.target.result);
-    };
-    reader.readAsDataURL(file);
-}
-
-// Show crop modal
-function showCropModal(imageSrc) {
-    const img = new Image();
-    img.onload = function() {
-        const canvas = document.getElementById('cropPreview');
-        const ctx = canvas.getContext('2d');
-        
-        // Set canvas size to square
-        const size = Math.min(img.width, img.height);
-        canvas.width = 300;
-        canvas.height = 300;
-        
-        // Calculate crop position to center the image
-        const cropX = (img.width - size) / 2;
-        const cropY = (img.height - size) / 2;
-        
-        // Draw cropped image
-        ctx.drawImage(img, cropX, cropY, size, size, 0, 0, 300, 300);
-        
-        document.getElementById('cropModal').style.display = 'block';
-    };
-    img.src = imageSrc;
-}
-
-// Apply crop
-function applyCrop() {
-    const canvas = document.getElementById('cropPreview');
-    cropImageData = canvas.toDataURL('image/jpeg', 0.8);
-    
-    // Show preview in main form
-    const preview = document.getElementById('imagePreview');
-    preview.innerHTML = `<img src="${cropImageData}" alt="Preview" class="preview-image">`;
-    
-    closeCropModal();
-}
-
-// Close crop modal
-function closeCropModal() {
-    document.getElementById('cropModal').style.display = 'none';
 }
 
 // Show notification

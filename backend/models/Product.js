@@ -8,7 +8,6 @@ class Product {
         this.subcategory = productData.subcategory || null;
         this.price = productData.price;
         this.sizes = productData.sizes || [];
-        this.images = productData.images || [];
         this.ingredients = productData.ingredients || [];
         this.nutritionalInfo = productData.nutritionalInfo || {};
         this.allergens = productData.allergens || [];
@@ -81,18 +80,6 @@ class Product {
                                     minimum: 0
                                 },
                                 calories: { bsonType: ["int", "null"] }
-                            }
-                        }
-                    },
-                    images: {
-                        bsonType: "array",
-                        items: {
-                            bsonType: "object",
-                            required: ["url", "alt"],
-                            properties: {
-                                url: { bsonType: "string" },
-                                alt: { bsonType: "string" },
-                                isPrimary: { bsonType: "bool" }
                             }
                         }
                     },

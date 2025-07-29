@@ -293,20 +293,6 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="productImage">Product Image</label>
-                    <div class="image-upload-container">
-                        <input type="file" id="productImage" accept="image/*">
-                        <div class="image-preview" id="imagePreview">
-                            <div class="image-placeholder">
-                                <i class="fas fa-image"></i>
-                                <p>Click to upload image</p>
-                            </div>
-                        </div>
-                        <canvas id="cropCanvas" style="display: none;"></canvas>
-                    </div>
-                </div>
-                
-                <div class="form-group">
                     <label>
                         <input type="checkbox" id="productInStock" name="inStock" checked>
                         In Stock
@@ -320,25 +306,6 @@
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Crop Modal -->
-    <div id="cropModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Crop Image</h2>
-                <button class="close-btn" id="closeCropModalBtn">&times;</button>
-            </div>
-            <div class="crop-container">
-                <div class="crop-area">
-                    <canvas id="cropPreview"></canvas>
-                </div>
-                <div class="crop-controls">
-                    <button type="button" class="secondary-btn" id="cancelCropBtn">Cancel</button>
-                    <button type="button" class="primary-btn" id="applyCropBtn">Apply Crop</button>
-                </div>
-            </div>
         </div>
     </div>
 

@@ -527,28 +527,6 @@ body {
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.product-image {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    background-color: #f8f9fa;
-}
-
-.product-image-placeholder {
-    width: 100%;
-    height: 150px;
-    background-color: #f8f9fa;
-    border: 2px dashed #ddd;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #999;
-    margin-bottom: 1rem;
-}
-
 .product-info {
     min-height: 120px;
     display: flex;
@@ -793,72 +771,12 @@ body {
     background-color: #219a52;
 }
 
-.image-upload-container {
-    position: relative;
-}
-
-.image-preview {
-    width: 100%;
-    height: 200px;
-    border: 2px dashed #ddd;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    background-color: #f8f9fa;
-    margin-top: 0.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.image-placeholder {
-    text-align: center;
-    color: #999;
-}
-
-.image-placeholder i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-}
-
-.preview-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
 .modal-actions {
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
     padding: 1.5rem;
     border-top: 1px solid #e0e0e0;
-}
-
-.crop-container {
-    padding: 1.5rem;
-}
-
-.crop-area {
-    margin-bottom: 1.5rem;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 300px;
-}
-
-.crop-controls {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-}
-
-#cropPreview {
-    max-width: 300px;
-    max-height: 300px;
-    border: 2px solid #3498db;
 }
 
 /* Loading States */

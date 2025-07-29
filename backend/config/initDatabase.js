@@ -194,9 +194,6 @@ async function insertSampleProducts(db) {
                 { size: 'small', price: 2.50, calories: 5 },
                 { size: 'medium', price: 3.00, calories: 10 }
             ],
-            images: [
-                { url: '/images/espresso.jpg', alt: 'Espresso shot', isPrimary: true }
-            ],
             ingredients: ['espresso beans', 'water'],
             nutritionalInfo: {
                 calories: 5,
@@ -233,9 +230,6 @@ async function insertSampleProducts(db) {
                 { size: 'small', price: 4.50, calories: 120 },
                 { size: 'medium', price: 5.00, calories: 150 },
                 { size: 'large', price: 5.50, calories: 180 }
-            ],
-            images: [
-                { url: '/images/cappuccino.jpg', alt: 'Cappuccino with foam art', isPrimary: true }
             ],
             ingredients: ['espresso beans', 'milk', 'water'],
             nutritionalInfo: {
@@ -281,9 +275,6 @@ async function insertSampleProducts(db) {
             category: 'pastries',
             subcategory: 'breakfast',
             price: { base: 3.25 },
-            images: [
-                { url: '/images/croissant.jpg', alt: 'Fresh croissant', isPrimary: true }
-            ],
             ingredients: ['flour', 'butter', 'eggs', 'milk', 'sugar', 'salt', 'yeast'],
             nutritionalInfo: {
                 calories: 231,
@@ -309,9 +300,6 @@ async function insertSampleProducts(db) {
             sizes: [
                 { size: 'medium', price: 3.75, calories: 5 },
                 { size: 'large', price: 4.25, calories: 10 }
-            ],
-            images: [
-                { url: '/images/iced-coffee.jpg', alt: 'Iced coffee with ice cubes', isPrimary: true }
             ],
             ingredients: ['coffee beans', 'water', 'ice'],
             nutritionalInfo: {

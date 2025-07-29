@@ -145,8 +145,7 @@ To add new features:
 6. Implement frontend-backend integration
 7. Add payment processing (Stripe integration)
 8. Add email notifications
-9. Implement file upload for product images
-10. Add comprehensive testing
+9. Add comprehensive testing
 
 ## Contributing
 

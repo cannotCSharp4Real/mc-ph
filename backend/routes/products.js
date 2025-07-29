@@ -72,7 +72,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const db = getDB();
-        const { name, description, category, image, inStock, price, sizes } = req.body;
+        const { name, description, category, inStock, price, sizes } = req.body;
         
         console.log('Creating product with data:', req.body);
         
@@ -97,7 +97,6 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
             name,
             description: description || '',
             category,
-            image: image || null,
             inStock: inStock !== undefined ? inStock : true,
             createdAt: new Date(),
             updatedAt: new Date()
@@ -125,7 +124,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const db = getDB();
         const { ObjectId } = require('mongodb');
-        const { name, description, category, image, inStock, price, sizes } = req.body;
+        const { name, description, category, inStock, price, sizes } = req.body;
         
         // Validate required fields
         if (!name || !category) {
@@ -136,7 +135,6 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
             name,
             description: description || '',
             category,
-            image: image || null,
             inStock: inStock !== undefined ? inStock : true,
             updatedAt: new Date()
         };

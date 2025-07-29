@@ -399,7 +399,6 @@ function renderProducts() {
             
             return `
                 <div class="product-card">
-                    <img src="${product.image || '/images/placeholder.jpg'}" alt="${product.name || 'Product'}" class="product-image">
                     <div class="product-info">
                         <div class="product-category">${product.category || 'Unknown'}</div>
                         <h3 class="product-name">${product.name || 'Unnamed Product'}</h3>

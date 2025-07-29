@@ -81,11 +81,6 @@ This document describes the MongoDB schema design for the Coffee Shop management
     price: Number (min: 0),
     calories: Number (optional)
   }],
-  images: [{
-    url: String (required),
-    alt: String (required),
-    isPrimary: Boolean (default: false)
-  }],
   ingredients: [String],
   nutritionalInfo: {
     calories: Number,
