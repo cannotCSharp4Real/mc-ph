@@ -241,15 +241,13 @@ body {
 
 .social-links {
     display: flex;
-    gap: 1.5rem;
-    align-items: center;
+    gap: 1rem;
 }
 
 .social-link {
-    color: #333;
+    color: white;
     text-decoration: none;
     font-size: 14px;
-    font-weight: 500;
     transition: color 0.3s ease;
 }
 
